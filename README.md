@@ -1,2 +1,2 @@
-# Sample template for vuejs application development
-just using `vuejs`, `webpack`, `webpack-cli` and some webpack plugins for development.
+# vuejs-contour-module
+a contour drawing module
