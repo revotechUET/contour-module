@@ -29,10 +29,6 @@ module.exports = {
             {
                 test: /\.less$/,
                 use: ['style-loader', 'css-loader', 'less-loader'],
-            },
-            {
-                test: /\.(png|jpeg|ttf|...)$/,
-                use: [ { loader: 'url-loader' } ]
             }
         ],
     },

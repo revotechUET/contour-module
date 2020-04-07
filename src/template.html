@@ -1,0 +1,10 @@
+<fragment>
+    <contour-view
+        :values="values" :n-rows="headers.numOfCols" :n-cols="headers.numOfRows"
+        :color-scale="colorScale">
+    </contour-view>
+    <contour-file-import :onDataChanged="onDataChanged"></contour-file-import>
+    <color-scale-generator :onScaleChanged="onColorScaleChanged" :min-val="minValue" :max-val="maxValue"></color-scale-generator>
+    <div>
+    </div>
+</fragment>
