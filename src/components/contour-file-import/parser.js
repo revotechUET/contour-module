@@ -67,6 +67,9 @@ function parseZmapGrid(fileContent) {
         } else if (headerLineIdx == 2) {
             const lineData = line.split(",");
             if (lineData.length) {
+                returnData.headers["thirdLine1st"] = Number(lineData[0]);
+                returnData.headers["xDirection"] = Number(lineData[1]);
+                returnData.headers["yDirection"] = Number(lineData[2]);
                 headerLineIdx = 3;
             }
         } else if (headerLineIdx >= 3 && line.match(/^@$/)) {
