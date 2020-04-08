@@ -3,6 +3,7 @@ import {Plugin} from "vue-fragment";
 import _ from "lodash";
 import components from "./components";
 import template from "./template.html";
+import "./vendors/ctxtextpath";
 import * as d3 from "d3";
 
 Vue.use(Plugin);

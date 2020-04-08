@@ -4,6 +4,10 @@ import { parseZmapGrid } from "./parser";
 const componentName = "contour-file-import";
 const component = {
     props: ['onDataChanged'],
+    data: () => ({
+        headers: {},
+        data: [],
+    }),
     template,
     methods: {
         onFileChange: function(event) {
@@ -11,6 +15,8 @@ const component = {
             const reader = new FileReader();
             reader.onload = e => {
                 const parsedData = parseZmapGrid(e.target.result);
+                this.headers = parsedData.headers;
+                this.data = parsedData.data;
                 this.onDataChanged(parsedData);
             }
             reader.readAsText(event.target.files[0]);
