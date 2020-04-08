@@ -16,7 +16,10 @@ new Vue({
         values: [],
         minValue: 0,
         maxValue: 1,
-        colorScale: d3.scaleQuantize().range(["#5E4FA2", "#3288BD", "#66C2A5", "#ABDDA4", "#E6F598", "#FFFFBF", "#FEE08B", "#FDAE61", "#F46D43", "#D53E4F", "#9E0142"])
+        colorScale: d3.scaleLinear().range(['red', 'blue']),
+        step: 100,
+        majorTick: 5,
+        showLabel: true
     },
     methods: {
         onDataChanged: function(changedData) {

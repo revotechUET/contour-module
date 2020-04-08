@@ -17,61 +17,281 @@ const component = {
     mounted() {
         this.$nextTick(() => {
             const d3Container = d3.select(this.$refs.colorBar);
+            // create handles for color stops
+            const d3Svg = d3Container.append("svg")
+                    .style('position', 'absolute')
+                    .style('width', d3Container.node().offsetWidth)
+                    .style('height', 90);
+            // draw color gradient
             const d3Canvas = d3Container.append('canvas')
                     .attr('width', d3Container.node().offsetWidth)
                     .attr('height', 50);
+
             // sample palette
             this.domain = [this.minVal, this.maxVal];
             this.range = ['red', 'blue'];
-            const scale = d3.scaleLinear().domain(this.domain).range(this.range);
             this.colorBar = new ColorBar(d3Canvas);
-            this.colorBar.scale = scale;
-            this.colorBar.redraw();
+            this.colorBar.redraw(this.domain, this.range);
+
+            this.colorHandles = new ColorHandles(d3Svg, this.onColorStopsChanged);
+            this.colorHandles.updateColorStops(this.domain, this.range);
+
         })
     },
-    methods: { },
-    watch: {
-        minVal: function(newVal) {
+    methods: {
+        onColorStopsChanged: function(domain, range) {
+            // console.log("color changed", domain, range);
+            this.domain = domain;
+            this.range = range;
+            this.colorBar.redraw(this.domain, this.range);
+            // update scale
+            this.onScaleChanged(d3.scaleLinear().domain(this.domain).range(this.range));
         },
+        updateVertices: function(minVertex, maxVertex) {
+            const extent = d3.extent(this.domain);
+            if (extent[0] == minVertex && extent[1] == maxVertex) return;
+            const scaleFn = d3.scaleLinear()
+                    .domain(extent)
+                    .range([minVertex, maxVertex]);
+            for(const idx in this.domain) {
+                this.domain[idx] = scaleFn(this.domain[idx]);
+            }
+            this.colorBar.redraw(this.domain, this.range);
+            this.colorHandles.updateColorStops(this.domain, this.range);
+        }
+    },
+    watch: {
+        minVal: function(val) {
+            console.log("minVal changed", val, this.minVal, this.maxVal);
+            this.updateVertices(this.minVal, this.maxVal);
+        },
+        maxVal: function(val) {
+            console.log("maxVal changed", val, this.minVal, this.maxVal);
+            this.updateVertices(this.minVal, this.maxVal);
+        },
+        /*
         domain: (val) => {
             console.log("domain changed", val);
         },
         range: (val) => {
             console.log("range changed", val);
         }
+        */
     }
 }
 Vue.component(componentName, component);
 export default component;
 
+function ColorHandles(d3Svg, onColorStopChanges) {
+    const handler = this;
+    this.d3Svg = d3Svg;
+    this.colorStops = [];
+    this.transformX = d3.scaleLinear().range([0, d3Svg.node().clientWidth]);
+
+    this.updateColorStops = function(domain, range) {
+        removeAllColorStops();
+        this.transformX
+            .domain(d3.extent(domain))
+            .range([0, d3Svg.node().clientWidth]);
+        for(const index in domain) {
+            addColorStop(domain[index], range[index], function(value, color) {
+                domain[index] = value;
+                range[index] = color;
+                const sorted = sortPair(domain, range);
+                onColorStopChanges(sorted.domain, sorted.range);
+            }, function() {
+                // on delete
+                if (index == 0 || index == domain.length - 1) return;
+                domain.splice(index, 1);
+                range.splice(index, 1);
+                const sorted = sortPair(domain, range);
+                handler.updateColorStops(sorted.domain, sorted.range);
+                onColorStopChanges(sorted.domain, sorted.range);
+            } , (index == 0 || index == domain.length - 1));
+        }
+    }
+
+    this.d3Svg.on('click', function() {
+        console.log('bar click',d3.event);
+        const newValue = handler.transformX.invert(d3.event.x);
+        const newColor = 'red';
+        const domain = handler.colorStops.map(colorStop => colorStop.__value);
+        const range = handler.colorStops.map(colorStop => colorStop.__color);
+        domain.push(newValue);
+        range.push(newColor);
+        const sorted = sortPair(domain, range);
+        handler.updateColorStops(sorted.domain, sorted.range);
+        onColorStopChanges(sorted.domain, sorted.range);
+    })
+
+    const removeColorStop = function(colorStop) {
+        colorStop.remove();
+    }
+
+    const removeAllColorStops = () => {
+        this.colorStops.forEach(removeColorStop)
+        this.colorStops.length = 0;
+    }
+
+    const HANDLE_WIDTH = 4;
+    const addColorStop = (value, color, onChanged, deleteFn, disableDrag) => {
+        const xPosition = this.transformX(value);
+        const colorStopGroup = d3Svg.append('g')
+            .attr('transform', `translate(${xPosition}, 0)`)
+            .attr('x', 0)
+            .attr('y', 0);
+        const rect = colorStopGroup.append('rect')
+            .attr('width', HANDLE_WIDTH)
+            .attr('height', 50)
+            .attr('x', - HANDLE_WIDTH/2)
+            .attr('y', 0)
+            .style('cursor', disableDrag ? 'auto':'col-resize')
+            .style('fill', 'black');
+
+        colorStopGroup.__value = value;
+        colorStopGroup.__color = color;
+
+        rect.on('mouseover', function() {
+            rect.attr('width', HANDLE_WIDTH*2)
+                .attr('x', -HANDLE_WIDTH);
+        })
+        rect.on('mouseleave', function() {
+            rect.attr('width', HANDLE_WIDTH)
+                .attr('x', -HANDLE_WIDTH/2);
+        })
+
+        const colorIndicator = colorStopGroup.append('rect')
+            .attr('width', 10)
+            .attr('height', 10)
+            .attr('x', -5)
+            .attr('y', 55)
+            .style('cursor', 'pointer')
+            .style('fill', color);
+
+        const textIndicator = colorStopGroup.append('text')
+            .attr('x', 0)
+            .attr('y', 80)
+            .attr('text-anchor', 'middle')
+            .style('font-size', 12)
+            .text(value.toFixed(3));
+
+        rect.on('click', function() {
+            d3.event.stopPropagation();
+            if(d3.event.ctrlKey) {
+                deleteFn();
+            };
+        })
+
+        colorIndicator.on('click', function() {
+            d3.event.stopPropagation();
+            if(d3.event.ctrlKey) {
+                deleteFn();
+                return;
+            };
+            openColorPicker(d3.select(this).style('fill'))
+                .then(color => {
+                    d3.select(this).style('fill', color);
+                    colorStopGroup.__color = color;
+                    onChanged(colorStopGroup.__value, colorStopGroup.__color);
+                })
+        })
+
+        // enable dragging
+        if (!disableDrag)
+            colorStopGroup.call(d3.drag()
+                .on('start', () => onStartDragging(colorStopGroup, onChanged))
+                .on('drag', () => onDragging(colorStopGroup, onChanged))
+                .on('end', () => onStopDragging(colorStopGroup, onChanged))
+            );
+
+        this.colorStops.push(colorStopGroup);
+    }
+
+    function onStartDragging(colorStopGroup, onChanged) {
+        if (!isInside(d3.event.x, handler.transformX.range())) return;
+        colorStopGroup.__value = handler.transformX.invert(d3.event.x);
+        colorStopGroup
+            .attr("transform", `translate(${d3.event.x}, 0)`);
+        colorStopGroup.select('text')
+            .text(colorStopGroup.__value.toFixed(3));
+        onChanged(colorStopGroup.__value, colorStopGroup.__color);
+    }
+
+    function onStopDragging(colorStopGroup, onChanged) {
+        if (!isInside(d3.event.x, handler.transformX.range())) return;
+        colorStopGroup.__value = handler.transformX.invert(d3.event.x);
+        colorStopGroup
+            .attr("transform", `translate(${d3.event.x}, 0)`);
+        colorStopGroup.select('text')
+            .text(colorStopGroup.__value.toFixed(3));
+        onChanged(colorStopGroup.__value, colorStopGroup.__color);
+    }
+
+    function onDragging(colorStopGroup, onChanged) {
+        if (!isInside(d3.event.x, handler.transformX.range())) return;
+        colorStopGroup.__value = handler.transformX.invert(d3.event.x);
+        colorStopGroup
+            .attr("transform", `translate(${d3.event.x}, 0)`);
+        colorStopGroup.select('text')
+            .text(colorStopGroup.__value.toFixed(3));
+        onChanged(colorStopGroup.__value, colorStopGroup.__color);
+    }
+}
+
+function isInside(value, range) {
+    return (value - range[0])*(value - range[1]) <= 0;
+}
+
+function sortPair(domain, color) {
+    const pairs = [];
+    for (const idx in domain) {
+        pairs.push([domain[idx], color[idx]]);
+    }
+    pairs.sort((pa, pb) => pa[0] - pb[0]);
+    return {
+        domain: pairs.map(p => p[0]),
+        range: pairs.map(p => p[1])
+    }
+}
+
+function openColorPicker(color) {
+    return new Promise(resolve => {
+        const inputColor = document.createElement('input');
+        inputColor.type = 'color';
+        inputColor.value = color;
+        inputColor.addEventListener('change', () => {
+            const col = inputColor.value;
+            inputColor.remove();
+            resolve(col);
+        })
+        inputColor.click();
+    })
+}
+
 function ColorBar(d3Canvas) {
     this.d3Canvas = d3Canvas;
     this.canvasNode = d3Canvas.node();
     this.context = this.canvasNode.getContext('2d');
-    this.scale = null;
+    this.domain = [];
+    this.range = [];
 
-    this.redraw = () => {
-        if(!this.scale) return;
-        const domain = this.scale.domain();
-        const extent = d3.extent(domain);
+    // redraw color gradient
+    this.redraw = (domain, range) => {
+        this.domain = domain || this.domain;
+        this.range = range || this.range;
+        if(!this.domain.length || !this.range.length) return;
+
+        const scale = d3.scaleLinear().domain(this.domain).range(this.range);
+        const extent = d3.extent(this.domain);
         const normalizeFn = d3.scaleLinear().domain(extent).range([0, 1]);
         const transformX = d3.scaleLinear().domain(extent).range([0, this.canvasNode.width]);
         const grd = this.context.createLinearGradient(0, 0, this.canvasNode.width, 0);
-        domain.forEach(point => {
-            grd.addColorStop(normalizeFn(point), this.scale(point));
+        this.domain.forEach(point => {
+            grd.addColorStop(normalizeFn(point), scale(point));
         })
         // draw
         this.context.clearRect(0, 0, this.canvasNode.width, this.canvasNode.height);
         this.context.fillStyle = grd;
         this.context.fillRect(0, 0, this.canvasNode.width, this.canvasNode.height);
-
-        // draw color stop;
-        this.context.fillStyle = 'black';
-        domain.forEach(point => {
-            this.context.fillRect(
-                transformX(point) - 2, 0,
-                4, this.canvasNode.height + 10
-            )
-        })
     }
 }
