@@ -1,5 +1,5 @@
 # vuejs-contour-module
-a contour drawing module
+a contour drawing module written in vuejs
 
 # development
 run `yarn build -w` for packing files, dependencies and starting watching files
