@@ -20,7 +20,9 @@ new Vue({
         colorScale: d3.scaleLinear().range(['red', 'blue']),
         step: 100,
         majorTick: 5,
-        showLabel: true
+        fontSize: 2,
+        showLabel: true,
+        scale: 1
     },
     methods: {
         onDataChanged: function(changedData) {

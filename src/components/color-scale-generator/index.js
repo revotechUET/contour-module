@@ -20,6 +20,7 @@ const component = {
             // create handles for color stops
             const d3Svg = d3Container.append("svg")
                     .style('position', 'absolute')
+                    .style('overflow', 'visible')
                     .style('width', d3Container.node().offsetWidth)
                     .style('height', 90);
             // draw color gradient
@@ -107,7 +108,7 @@ function ColorHandles(d3Svg, onColorStopChanges) {
                 const sorted = sortPair(domain, range);
                 handler.updateColorStops(sorted.domain, sorted.range);
                 onColorStopChanges(sorted.domain, sorted.range);
-            } , (index == 0 || index == domain.length - 1));
+            } , (index == 0 || index == domain.length - 1), index);
         }
     }
 
@@ -134,7 +135,7 @@ function ColorHandles(d3Svg, onColorStopChanges) {
     }
 
     const HANDLE_WIDTH = 4;
-    const addColorStop = (value, color, onChanged, deleteFn, disableDrag) => {
+    const addColorStop = (value, color, onChanged, deleteFn, disableDrag, pIdx) => {
         const xPosition = this.transformX(value);
         const colorStopGroup = d3Svg.append('g')
             .attr('transform', `translate(${xPosition}, 0)`)
@@ -171,7 +172,7 @@ function ColorHandles(d3Svg, onColorStopChanges) {
         const textIndicator = colorStopGroup.append('text')
             .attr('x', 0)
             .attr('y', 80)
-            .attr('text-anchor', 'middle')
+            .attr('text-anchor', disableDrag ? (pIdx == 0 ? 'start':'end'):'middle')
             .style('font-size', 12)
             .text(value.toFixed(3));
 
@@ -215,6 +216,17 @@ function ColorHandles(d3Svg, onColorStopChanges) {
         colorStopGroup.select('text')
             .text(colorStopGroup.__value.toFixed(3));
         onChanged(colorStopGroup.__value, colorStopGroup.__color);
+
+        const tooltipGroup = colorStopGroup.append('g')
+            .attr('class', 'text-tool-tip')
+            .attr('x', 0)
+            .attr('y', 0);
+        tooltipGroup.append('text')
+            .attr('font-size', 12)
+            .attr('x', 0)
+            .attr('y', -5)
+            .attr('text-anchor', 'middle')
+            .text(colorStopGroup.__value.toFixed(4));
     }
 
     function onStopDragging(colorStopGroup, onChanged) {
@@ -225,6 +237,8 @@ function ColorHandles(d3Svg, onColorStopChanges) {
         colorStopGroup.select('text')
             .text(colorStopGroup.__value.toFixed(3));
         onChanged(colorStopGroup.__value, colorStopGroup.__color);
+
+        colorStopGroup.select('g.text-tool-tip').remove();
     }
 
     function onDragging(colorStopGroup, onChanged) {
@@ -235,6 +249,10 @@ function ColorHandles(d3Svg, onColorStopChanges) {
         colorStopGroup.select('text')
             .text(colorStopGroup.__value.toFixed(3));
         onChanged(colorStopGroup.__value, colorStopGroup.__color);
+
+        colorStopGroup
+            .select('g.text-tool-tip > text')
+            .text(colorStopGroup.__value.toFixed(4));
     }
 }
 

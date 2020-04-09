@@ -5,7 +5,10 @@ import template from "./template.html";
 const componentName = "contour-view";
 
 const component = {
-    props: ['values', "nRows", "nCols", "colorScale", "step", "majorTick", "showLabel"],
+    props: [
+        'values', "nRows", "nCols", "colorScale", "step", "majorTick", "labelFontSize", "showLabel",
+        'onScaleChanged'
+    ],
     template,
     mounted() {
         this.$nextTick(() => {
@@ -32,6 +35,10 @@ const component = {
             console.log("showLabel changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
+        labelFontSize: function(val) {
+            console.log("labelFontSize changed");
+            updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
+        }
     },
     methods: {
         dataFn: function() {
@@ -42,7 +49,9 @@ const component = {
                 step: this.step,
                 majorTick: this.majorTick,
                 showLabel: this.showLabel,
-                colorScale: this.colorScale
+                labelFontSize: this.labelFontSize,
+                colorScale: this.colorScale,
+                onScaleChanged: this.onScaleChanged
             }
         }
     }
@@ -60,7 +69,7 @@ function initContour(container, dataFn) {
         .attr("height", containerHeight || 500);
 
     const zoomBehavior = d3.zoom()
-            .on("zoom", () => onCanvasZoom(d3Container));
+            .on("zoom", () => onCanvasZoom(d3Container, dataFn().onScaleChanged));
     d3Canvas.call(zoomBehavior);
 
     window.addEventListener("resize", (e) => {
@@ -75,8 +84,9 @@ function initContour(container, dataFn) {
     });
 }
 
-function onCanvasZoom(d3Container) {
+function onCanvasZoom(d3Container, onScaleChanged) {
     const transform = _.clone(d3.event.transform);
+    onScaleChanged && onScaleChanged(transform.k);
     updateCanvasTransformDebounced(d3Container, transform);
 }
 
@@ -94,6 +104,8 @@ function updateContourData(container, dataFn) {
     const context = d3Canvas.node().getContext("2d");
     const data = dataFn();
 
+    if (!data.width || !data.height) return;
+
     const extent = d3.extent(data.values);
     const threshold = d3.range(extent[0], extent[1], data.step);
 
@@ -102,7 +114,8 @@ function updateContourData(container, dataFn) {
         .size([data.width, data.height])
         .thresholds(threshold)
         (data.values);
-    const mappedContourData = contourData.map(contourDataToPixelMap)
+    /*
+    const mappedContourData = contourData.map(contourDataToPixelMap);
 
     const path2Ds = mappedContourData.map((contour, i) => {
         const path = d3.geoPath()(contour);
@@ -115,29 +128,66 @@ function updateContourData(container, dataFn) {
                 });
     })
     path2Ds.showLabel = data.showLabel;
+    path2Ds.labelFontSize = data.labelFontSize;
+    */
+    Object.assign(contourData, {
+        majorTick: data.majorTick,
+        showLabel: data.showLabel,
+        labelFontSize: data.labelFontSize,
+        colorScale: data.colorScale
+    })
 
-    drawContourSync(d3Container, path2Ds);
+    drawContourSync(d3Container, contourData);
+}
+
+function getPath2Ds(contourData, transform) {
+    console.log("recalculating paths");
+    const path2Ds = contourData
+        .map(d => contourDataToPixelMap(d, transform))
+        .map((contour, i) => {
+            const path = d3.geoPath()(contour);
+            return Object.assign(new Path2D(path), {
+                pathData: _.clone(contour.coordinates),
+            });
+        });
+    return path2Ds;
 }
 
 let cachedPath2Ds = [];
+let cachedContourData = [];
 let cachedTransform = null;
-function drawContourSync(d3Container, path2Ds, transform) {
+function drawContourSync(d3Container, contourData, transform) {
     const d3Canvas = d3Container.select('canvas');
     const context = d3Canvas.node().getContext("2d");
 
-    cachedPath2Ds = path2Ds || cachedPath2Ds;
+    const scaleChanged = (transform && cachedTransform && transform.k != cachedTransform.k) ? true:(cachedTransform ? false:true);
+
     cachedTransform = transform || cachedTransform;
+    cachedContourData = contourData || cachedContourData;
+    cachedPath2Ds = scaleChanged ? getPath2Ds(cachedContourData, cachedTransform) : cachedPath2Ds;
+
+    // editing props
+    cachedPath2Ds.showLabel = cachedContourData.showLabel;
+    cachedPath2Ds.labelFontSize = cachedContourData.labelFontSize;
+    cachedPath2Ds.forEach((path, i) => {
+        Object.assign(path, {
+            fillColor: cachedContourData.colorScale(cachedContourData[i].value),
+            isMajor: i % cachedContourData.majorTick == 0,
+            value: cachedContourData[i].value.toFixed(0),
+        });
+    })
+
     context.save();
     context.clearRect(0, 0, d3Canvas.attr("width"), d3Canvas.attr("height"));
     if (cachedTransform) {
         context.translate(cachedTransform.x, cachedTransform.y);
-        context.scale(cachedTransform.k, cachedTransform.k);
+        // context.scale(cachedTransform.k, cachedTransform.k);
     }
     context.lineWidth = 1;
     context.strokeStyle = "black";
     cachedPath2Ds.forEach(path => {
         if (path.isMajor)
-            context.lineWidth = 2;
+            context.lineWidth = 3;
         context.stroke(path);
         if (path.isMajor)
             context.lineWidth = 1;
@@ -147,13 +197,13 @@ function drawContourSync(d3Container, path2Ds, transform) {
     })
 
     if (cachedPath2Ds.showLabel) {
-        context.strokeStyle = "white";
+        context.strokeStyle = "black";
         context.textAlign = "center";
         context.textBaseline = "middle";
-        context.fillStyle =  "black";
-        context.font = "2px Serif";
-        context.lineWidth = 0.5;
-        const LABEL_STEP = 50;
+        context.fillStyle =  "white";
+        context.font = `${cachedPath2Ds.labelFontSize}px Sans-Serif`;
+        context.lineWidth = 1;
+        const LABEL_STEP = 30;
         cachedPath2Ds.forEach((path) => {
             if (path.isMajor) {
                 // draw value above path
@@ -172,12 +222,16 @@ function drawContourSync(d3Container, path2Ds, transform) {
     context.restore();
 }
 
-function contourDataToPixelMap({type, value, coordinates}) {
-        return {type, value, coordinates: coordinates.map(rings => {
-            return rings.map(points => {
-                return points.map(([x, y]) => {
-                    return [x, y];
-                })
+function contourDataToPixelMap({type, value, coordinates}, transform) {
+    const _transform = transform || {x: 0, y: 0, k: 1};
+    return {type, value, coordinates: coordinates.map(rings => {
+        return rings.map(points => {
+            return points.map(([x, y]) => {
+                return [
+                    (x) * _transform.k /*+ _transform.x*/,
+                    (y) * _transform.k /*+ _transform.y*/,
+                ];
             })
-        })}
-    }
+        })
+    })}
+}

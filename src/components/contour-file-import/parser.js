@@ -45,7 +45,7 @@ function parseZmapGrid(fileContent) {
             if (lineData.length) {
                 returnData.headers["nodeWidth"] = Number(lineData[0]);
                 returnData.headers["numNullValue"] = Number(lineData[1]);
-                returnData.headers["textNullValue"] = Number(lineData[2]);
+                returnData.headers["textNullValue"] = lineData[2];
                 returnData.headers["numOfDecimal"] = Number(lineData[3]);
                 returnData.headers["startCol"] = Number(lineData[4]);
 
@@ -67,7 +67,7 @@ function parseZmapGrid(fileContent) {
         } else if (headerLineIdx == 2) {
             const lineData = line.split(",");
             if (lineData.length) {
-                returnData.headers["thirdLine1st"] = Number(lineData[0]);
+                returnData.headers["rotationAngle"] = Number(lineData[0]);
                 returnData.headers["xDirection"] = Number(lineData[1]);
                 returnData.headers["yDirection"] = Number(lineData[2]);
                 headerLineIdx = 3;
@@ -77,6 +77,25 @@ function parseZmapGrid(fileContent) {
             startReadData = true;
             continue;
         } else if (startReadData) {
+            const nodeNums = returnData.headers.gridNodesPerPhysicalLine;
+            const nodeWidth = returnData.headers.nodeWidth;
+            const parsedArr = [];
+            for(let j = 0; j < nodeNums; ++j) {
+                const valueRaw = lines[i].substr(j*nodeWidth, nodeWidth);
+                if (!valueRaw.length) continue;
+                else if (valueRaw.length == 1 && valueRaw.charCodeAt(0) == 13) continue;
+                const value = matchNullValue(valueRaw.trim(), returnData.headers["numNullValue"], returnData.headers["textNullValue"]);
+                parsedArr.push(value);
+            }
+            if (parsedArr.length) {
+                if (returnData.data[returnData.data.length - 1]
+                    && returnData.data[returnData.data.length - 1].length < returnData.headers["numOfRows"])
+                    returnData.data[returnData.data.length - 1] = returnData.data[returnData.data.length - 1]
+                        .concat(parsedArr);
+                else if (returnData.data.length < returnData.headers["numOfCols"])
+                    returnData.data.push(parsedArr);
+            }
+            /*
             const lineData = line.split(/\s+/);
             if (lineData.length) {
                 if (returnData.data[returnData.data.length - 1]
@@ -88,6 +107,7 @@ function parseZmapGrid(fileContent) {
                     returnData.data.push(lineData.map(v => matchNullValue(v, returnData.headers["numNullValue"])))
                 }
             }
+            */
             continue;
         } else if (headerLineIdx < 0) {
             continue;
