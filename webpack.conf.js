@@ -1,12 +1,13 @@
-const HardSourceWebpackPlugin = require("hard-source-webpack-plugin")
-const HtmlWebpackPlugin = require("html-webpack-plugin")
+const HardSourceWebpackPlugin = require("hard-source-webpack-plugin");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
-const isDev = process.env.NODE_ENV === "dev" || true;
+const isDev = process.env.BUILD_ENV === "dev" ? true:false;
+console.log(`building in dev mode: ${isDev}`);
 
 module.exports = {
     context: __dirname + '/src',
     mode: isDev ? "development":"production",
-    devtool: isDev ? "cheap-module-eval-source-map":null,
+    devtool: isDev ? "cheap-module-eval-source-map":false,
     optimization: {
         minimize: isDev ? false:true
     },
@@ -34,6 +35,6 @@ module.exports = {
     },
     plugins: [
         new HardSourceWebpackPlugin(),
-        new HtmlWebpackPlugin({ template: "./index.html" })
+        new HtmlWebpackPlugin({ template: "./index.html" }),
     ]
 }

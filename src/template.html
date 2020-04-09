@@ -2,22 +2,36 @@
     <div style="width: 90vw;">
     <contour-view
         :values="values" :n-rows="headers.numOfCols" :n-cols="headers.numOfRows"
-        :color-scale="colorScale" :step="step" :major-tick="majorTick"
-        :showLabel="showLabel" :label-font-size="fontSize" :on-scale-changed="(_scl) => scale = _scl">
+        :min-x="headers.minX" :max-x="headers.maxX"
+        :min-y="headers.minY" :max-y="headers.maxY"
+        :color-scale="colorScale" :step="step" :major-every="majorEvery"
+        :show-grid="showGrid" :grid-major="gridMajor" :grid-minor="gridMinor" :grid-nice="gridNice"
+        :show-label="showLabel" :label-font-size="fontSize" :on-scale-changed="(_scl) => scale = _scl">
     </contour-view>
     </div>
-    <contour-file-import :onDataChanged="onDataChanged"></contour-file-import>
-    <color-scale-generator :onScaleChanged="onColorScaleChanged" :min-val="minValue" :max-val="maxValue"></color-scale-generator>
+    <contour-file-import :on-data-changed="onDataChanged"></contour-file-import>
+    <color-scale-generator :on-scale-changed="onColorScaleChanged" :min-val="minValue" :max-val="maxValue"></color-scale-generator>
     <div>
         <label>Scale</label>
-        <span>{{scale}}</span> <br/>
-        <label>Step</label>
+        <span>{{scale}}</span>
+        <br/>
+        <label>Contour Step</label>
         <input type="number" v-model="step"/>
-        <label>Major</label>
-        <input type="number" v-model="majorTick"/>
+        <label>Major Every</label>
+        <input type="number" v-model="majorEvery"/>
+        <br/>
         <label>fontSize</label>
         <input type="number" v-model="fontSize"/>
-        <label>ShowLabel</label>
+        <label>Show Text</label>
         <input type="checkbox" v-model="showLabel"/>
+        <br/>
+        <label>show Grid</label>
+        <input type="checkbox" v-model="showGrid"/>
+        <label>Major Tick</label>
+        <input type="number" v-model="gridMajor"/>
+        <label>Minor Tick</label>
+        <input type="number" v-model="gridMinor"/>
+        <label>Grid Nice Tick</label>
+        <input type="checkbox" v-model="gridNice"/>
     </div>
 </fragment>

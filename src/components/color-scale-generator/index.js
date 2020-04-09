@@ -5,7 +5,12 @@ import template from "./template.html";
 const componentName = "color-scale-generator";
 
 const component = {
-    props: ['onScaleChanged', 'minVal', 'maxVal'],
+    // props: ['onScaleChanged', 'minVal', 'maxVal'],
+    props: {
+        'onScaleChanged': Function,
+        'minVal': Number,
+        'maxVal': Number
+    },
     data: function() {
         return {
             domain: [],

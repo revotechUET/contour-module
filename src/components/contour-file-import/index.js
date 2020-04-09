@@ -3,7 +3,9 @@ import template from "./template.html";
 import { parseZmapGrid } from "./parser";
 const componentName = "contour-file-import";
 const component = {
-    props: ['onDataChanged'],
+    props: {
+        'onDataChanged': Function
+    },
     data: () => ({
         headers: {},
         data: [],

@@ -19,10 +19,14 @@ new Vue({
         maxValue: 1,
         colorScale: d3.scaleLinear().range(['red', 'blue']),
         step: 100,
-        majorTick: 5,
+        majorEvery: 5,
         fontSize: 2,
         showLabel: true,
-        scale: 1
+        showGrid: true,
+        gridMajor: 5,
+        gridMinor: 4,
+        gridNice: true,
+        scale: 1,
     },
     methods: {
         onDataChanged: function(changedData) {
