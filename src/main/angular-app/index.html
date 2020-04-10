@@ -8,21 +8,32 @@
         <div ng-app="myApp" ng-controller="rootController as rootCtrl">
             <div style="width: 90vw;">
             <contour-view
-                values="rootCtrl.values" n-rows="rootCtrl.headers.numOfCols" n-cols="rootCtrl.headers.numOfRows"
-                min-x="rootCtrl.headers.minX" max-x="headers.maxX"
-                min-y="rootCtrl.headers.minY" max-y="rootCtrl.headers.maxY"
-                color-scale="rootCtrl.colorScale" step="rootCtrl.step" major-every="rootCtrl.majorEvery"
-                show-grid="rootCtrl.showGrid" grid-major="rootCtrl.gridMajor" grid-minor="rootCtrl.gridMinor" grid-nice="rootCtrl.gridNice"
-                show-label="rootCtrl.showLabel" label-font-size="rootCtrl.fontSize" on-scale-changed="rootCtrl.onScaleChanged">
+                values-get="rootCtrl.getter('values')"
+                n-rows-get="rootCtrl.getter('headers.numOfCols')"
+                n-cols-get="rootCtrl.getter('headers.numOfRows')"
+                min-x-get="rootCtrl.getter('headers.minX')"
+                max-x-get="rootCtrl.getter('headers.maxX')"
+                min-y-get="rootCtrl.getter('headers.minY')"
+                max-y-get="rootCtrl.getter('headers.maxY')"
+                color-scale-get="rootCtrl.getter('colorScale')"
+                step-get="rootCtrl.getter('step')"
+                major-every-get="rootCtrl.getter('majorEvery')"
+                show-grid-get="rootCtrl.getter('showGrid')"
+                grid-major-get="rootCtrl.getter('gridMajor')"
+                grid-minor-get="rootCtrl.getter('gridMinor')"
+                grid-nice-get="rootCtrl.getter('gridNice')"
+                show-label-get="rootCtrl.getter('showLabel')"
+                label-font-size-get="rootCtrl.getter('fontSize')"
+                on-scale-changed-get="rootCtrl.getter('onScaleChanged')">
             </contour-view>
             </div>
             <contour-file-import
-                on-data-changed="rootCtrl.onDataChanged">
+                on-data-changed-get="rootCtrl.getter('onDataChanged')">
             </contour-file-import>
             <color-scale-generator
-                on-scale-changed-get="rootCtrl.onColorScaleChangedGet"
-                min-val-get="rootCtrl.minValueGet"
-                max-val-get="rootCtrl.maxValueGet">
+                on-scale-changed-get="rootCtrl.getter('onColorScaleChanged')"
+                min-val-get="rootCtrl.getter('minValue')"
+                max-val-get="rootCtrl.getter('maxValue')">
             </color-scale-generator>
             <div>
                 <label>Scale</label>

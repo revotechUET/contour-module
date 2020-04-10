@@ -13,7 +13,7 @@ const makeAngularModule = function(moduleName, template, propList) {
                     ${template}
                 </vue-container>
             `,
-            controller: Controller,
+            controller: ['$scope', Controller],
             controllerAs: 'ngVue',
             bindings
         })

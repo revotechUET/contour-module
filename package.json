@@ -23,7 +23,8 @@
   "scripts": {
     "build": "export BUILD_ENV=dev && webpack --config webpack.conf.js",
     "prod": "export BUILD_ENV=prod && webpack --config webpack.conf.js",
-    "build-angular": "export BUILD_ENV=dev && export BUILD_TARGET=angular-app && webpack --config webpack.conf.js"
+    "build-angular": "export BUILD_ENV=dev && export BUILD_TARGET=angular-app && webpack --config webpack.conf.js",
+    "prod-angular": "export BUILD_ENV=prod && export BUILD_TARGET=angular-app && webpack --config webpack.conf.js"
   },
   "author": "",
   "license": "ISC",

@@ -2,6 +2,7 @@ import Vue from "vue/dist/vue.min.js";
 import "!style-loader!css-loader!./style.css";
 import * as d3 from "d3";
 import template from "./template.html";
+import "../../vendors/ctxtextpath";
 const componentName = "contour-view";
 
 const component = {
@@ -20,58 +21,59 @@ const component = {
     },
     watch: {
         values: function(val) {
-            console.log("watching values");
+            console.log("vue - values changed");
             updateContourData(this.$refs.drawContainer, this.dataFn);
         },
         colorScale: function() {
+            console.log("vue - colorScale changed")
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
         step: function(val) {
-            console.log("onStep changed");
+            console.log("vue - onStep changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
         majorEvery: function(val) {
-            console.log("majorEvery changed");
+            console.log("vue - majorEvery changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
         showLabel: function(val) {
-            console.log("showLabel changed");
+            console.log("vue - showLabel changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
         showGrid: function(val) {
-            console.log("showGrid changed");
+            console.log("vue - showGrid changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn, 'grid');
         },
         gridMinor: function(val) {
-            console.log("gridMinor changed");
+            console.log("vue - gridMinor changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn, 'grid');
         },
         gridMajor: function(val) {
-            console.log("gridMajor changed");
+            console.log("vue - gridMajor changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn, 'grid');
         },
         gridNice: function(val) {
-            console.log("gridNice changed");
+            console.log("vue - gridNice changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn, 'grid');
         },
         labelFontSize: function(val) {
-            console.log("labelFontSize changed");
+            console.log("vue - labelFontSize changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
         minX: function(val) {
-            console.log("minX changed");
+            console.log("vue - minX changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
         maxX: function(val) {
-            console.log("maxX changed");
+            console.log("vue - maxX changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
         minY: function(val) {
-            console.log("minY changed");
+            console.log("vue - minY changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
         maxY: function(val) {
-            console.log("maxY changed");
+            console.log("vue - maxY changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
     },
@@ -222,7 +224,7 @@ function getRoundNumber(number, base, flag='up') {
 }
 
 function getGrid(contourData, transform) {
-    console.log("recalculating grid");
+    console.log("vue - recalculating grid");
     const minX = contourData.grid.minX;
     const maxX = contourData.grid.maxX;
     const minY = contourData.grid.minY;
@@ -309,7 +311,7 @@ function getGrid(contourData, transform) {
 }
 
 function getPath2Ds(contourData, transform, xToPixel, yToPixel) {
-    console.log("recalculating paths");
+    console.log("vue - recalculating paths");
     const path2Ds = contourData
         .map(d => contourDataToPixelMap(d, transform, xToPixel, yToPixel))
         .map((contour, i) => {

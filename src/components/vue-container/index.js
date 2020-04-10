@@ -8,7 +8,7 @@ Vue.use(Plugin);
 
 angular.module(moduleName,[]).component(moduleName, {
     template: '',
-    controller: Controller,
+    controller: ['$transclude', '$element', Controller],
     bindings: {
         vueData: "<",
         vueMethods: "<"

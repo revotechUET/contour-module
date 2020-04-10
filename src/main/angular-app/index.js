@@ -1,13 +1,13 @@
 import angular from 'angular';
 import "lodash";
 import * as d3 from 'd3';
-import components from '../../components';
+import {angularComponents} from '../../components';
 
-console.log("components to load", components);
+console.log("components to load", angularComponents);
 
 angular
-    .module('myApp', components.angularComponents)
-    .controller('rootController', function($scope) {
+    .module('myApp', angularComponents)
+    .controller('rootController', ['$scope', function($scope) {
         const rootCtrl = this;
         this.headers = {},
         this.values = [],
@@ -45,11 +45,14 @@ angular
             $scope.$digest();
         };
 
-        this.onColorScaleChangedGet = () => this.onColorScaleChanged;
-        this.minValueGet = () => this.minValue
-        this.maxValueGet = () => this.maxValue
-    });
+        const getter = {};
+        this.getter = (key) => {
+            if(!getter[key])
+                getter[key] = () => _.get(rootCtrl, key);
+            return getter[key];
+        }
+    }]);
 
-export default components.angularComponents;
+export default angularComponents;
 
 

@@ -46,7 +46,6 @@ const component = {
     },
     methods: {
         onColorStopsChanged: function(domain, range) {
-            // console.log("color changed", domain, range);
             this.domain = domain;
             this.range = range;
             this.colorBar.redraw(this.domain, this.range);
@@ -71,11 +70,11 @@ const component = {
     },
     watch: {
         minVal: function(val) {
-            console.log("minVal changed", val, this.minVal, this.maxVal);
+            console.log("vue - colorGenerator: minVal changed");
             this.updateVertices(this.minVal, this.maxVal);
         },
         maxVal: function(val) {
-            console.log("maxVal changed", val, this.minVal, this.maxVal);
+            console.log("vue - colorGenerator: maxVal changed");
             this.updateVertices(this.minVal, this.maxVal);
         },
     }
