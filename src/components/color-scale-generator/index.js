@@ -64,6 +64,9 @@ const component = {
             }
             this.colorBar.redraw(this.domain, this.range);
             this.colorHandles.updateColorStops(this.domain, this.range);
+
+            // reupdate scale for external
+            this.onScaleChanged(d3.scaleLinear().domain(this.domain).range(this.range));
         }
     },
     watch: {
@@ -75,14 +78,6 @@ const component = {
             console.log("maxVal changed", val, this.minVal, this.maxVal);
             this.updateVertices(this.minVal, this.maxVal);
         },
-        /*
-        domain: (val) => {
-            console.log("domain changed", val);
-        },
-        range: (val) => {
-            console.log("range changed", val);
-        }
-        */
     }
 }
 Vue.component(componentName, component);

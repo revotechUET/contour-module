@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>Angular app</title>
+    </head>
+    <body>
+        <div ng-app="myApp" ng-controller="rootController as rootCtrl">
+            <div style="width: 90vw;">
+            <contour-view
+                values="rootCtrl.values" n-rows="rootCtrl.headers.numOfCols" n-cols="rootCtrl.headers.numOfRows"
+                min-x="rootCtrl.headers.minX" max-x="headers.maxX"
+                min-y="rootCtrl.headers.minY" max-y="rootCtrl.headers.maxY"
+                color-scale="rootCtrl.colorScale" step="rootCtrl.step" major-every="rootCtrl.majorEvery"
+                show-grid="rootCtrl.showGrid" grid-major="rootCtrl.gridMajor" grid-minor="rootCtrl.gridMinor" grid-nice="rootCtrl.gridNice"
+                show-label="rootCtrl.showLabel" label-font-size="rootCtrl.fontSize" on-scale-changed="rootCtrl.onScaleChanged">
+            </contour-view>
+            </div>
+            <contour-file-import
+                on-data-changed="rootCtrl.onDataChanged">
+            </contour-file-import>
+            <color-scale-generator
+                on-scale-changed-get="rootCtrl.onColorScaleChangedGet"
+                min-val-get="rootCtrl.minValueGet"
+                max-val-get="rootCtrl.maxValueGet">
+            </color-scale-generator>
+            <div>
+                <label>Scale</label>
+                <span>{{rootCtrl.scale}}</span>
+                <br/>
+                <label>Color Scale</label>
+                <div>{{rootCtrl.colorScale.domain()}}</div>
+                <div>{{rootCtrl.colorScale.range()}}</div>
+                <br/>
+                <label>Contour Step</label>
+                <input type="number" ng-model="rootCtrl.step"/>
+                <label>Major Every</label>
+                <input type="number" ng-model="rootCtrl.majorEvery"/>
+                <br/>
+                <label>fontSize</label>
+                <input type="number" ng-model="rootCtrl.fontSize"/>
+                <label>Show Text</label>
+                <input type="checkbox" ng-model="rootCtrl.showLabel"/>
+                <br/>
+                <label>show Grid</label>
+                <input type="checkbox" ng-model="rootCtrl.showGrid"/>
+                <label>Major Tick</label>
+                <input type="number" ng-model="rootCtrl.gridMajor"/>
+                <label>Minor Tick</label>
+                <input type="number" ng-model="rootCtrl.gridMinor"/>
+                <label>Grid Nice Tick</label>
+                <input type="checkbox" ng-model="rootCtrl.gridNice"/>
+            </div>
+        </div>
+    </body>
+</html>

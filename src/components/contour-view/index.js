@@ -335,6 +335,8 @@ function drawContourSync(d3Container, contourData, transform, force=null) {
     cachedTransform = transform || cachedTransform;
     cachedContourData = contourData || cachedContourData;
 
+    if (!cachedContourData.grid) return;
+
     const gridNodeXtoPixel = cachedContourData.grid.nodeXToPixel;
     const gridNodeYtoPixel = cachedContourData.grid.nodeYToPixel;
     cachedPath2Ds = (scaleChanged || force=="all" || force=="path")

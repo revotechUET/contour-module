@@ -1,9 +1,9 @@
 import Vue from "vue/dist/vue.min.js";
 import {Plugin} from "vue-fragment";
 import _ from "lodash";
-import components from "./components";
+import vueComponents from "../../components";
 import template from "./template.html";
-import "./vendors/ctxtextpath";
+import "../../vendors/ctxtextpath";
 import * as d3 from "d3";
 
 Vue.use(Plugin);
@@ -11,7 +11,7 @@ Vue.use(Plugin);
 new Vue({
     el: "#vue-app",
     template,
-    components,
+    components: vueComponents,
     data: {
         headers: {},
         values: [],

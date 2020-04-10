@@ -2,7 +2,9 @@ const HardSourceWebpackPlugin = require("hard-source-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 const isDev = process.env.BUILD_ENV === "dev" ? true:false;
+const target = process.env.BUILD_TARGET || "vue-app";
 console.log(`building in dev mode: ${isDev}`);
+console.log(`building in target: ${target}`);
 
 module.exports = {
     context: __dirname + '/src',
@@ -12,7 +14,7 @@ module.exports = {
         minimize: isDev ? false:true
     },
     entry: {
-        main: "./index.js"
+        main: `./main/${target}/index.js`
     },
     output: {
         path: __dirname + "/dist",
@@ -35,6 +37,6 @@ module.exports = {
     },
     plugins: [
         new HardSourceWebpackPlugin(),
-        new HtmlWebpackPlugin({ template: "./index.html" }),
+        new HtmlWebpackPlugin({ template: `./main/${target}/index.html` }),
     ]
 }
