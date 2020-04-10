@@ -14,7 +14,8 @@ const template = `
         :min-x="minX" :max-x="maxX"
         :min-y="minY" :max-y="maxY"
         :color-scale="colorScale" :step="step" :major-every="majorEvery"
-        :show-grid="showGrid" :grid-major="gridMajor" :grid-minor="gridMinor" :grid-nice="gridNice"
+        :show-grid="showGrid" :grid-major="gridMajor" :grid-minor="gridMinor"
+        :grid-nice="gridNice" :y-direction="yDirection"
         :show-label="showLabel" :label-font-size="labelFontSize" :on-scale-changed="onScaleChanged">
     </contour-view>
 `;

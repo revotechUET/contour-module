@@ -24,6 +24,7 @@
                 grid-nice-get="rootCtrl.getter('gridNice')"
                 show-label-get="rootCtrl.getter('showLabel')"
                 label-font-size-get="rootCtrl.getter('fontSize')"
+                y-direction-get="rootCtrl.getter('yDirection')"
                 on-scale-changed-get="rootCtrl.getter('onScaleChanged')">
             </contour-view>
             </div>
@@ -61,6 +62,8 @@
                 <input type="number" ng-model="rootCtrl.gridMinor"/>
                 <label>Grid Nice Tick</label>
                 <input type="checkbox" ng-model="rootCtrl.gridNice"/>
+                <br/>
+                <input type="text" ng-model="rootCtrl.yDirection"/>
             </div>
         </div>
     </body>

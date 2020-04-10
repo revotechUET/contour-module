@@ -11,7 +11,7 @@ const component = {
         "labelFontSize", "showLabel",
         "showGrid", "gridMajor", "gridMinor", "gridNice",
         "minX", "maxX", "minY", "maxY",
-        'onScaleChanged'
+        'onScaleChanged', 'yDirection'
     ],
     template,
     mounted() {
@@ -21,59 +21,63 @@ const component = {
     },
     watch: {
         values: function(val) {
-            console.log("vue - values changed");
-            updateContourData(this.$refs.drawContainer, this.dataFn);
+            // console.log("vue - values changed");
+            updateContourData(this.$refs.drawContainer, this.dataFn, 'all');
         },
         colorScale: function() {
-            console.log("vue - colorScale changed")
+            // console.log("vue - colorScale changed")
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
         step: function(val) {
-            console.log("vue - onStep changed");
+            // console.log("vue - onStep changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
         majorEvery: function(val) {
-            console.log("vue - majorEvery changed");
+            // console.log("vue - majorEvery changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
         showLabel: function(val) {
-            console.log("vue - showLabel changed");
+            // console.log("vue - showLabel changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
         showGrid: function(val) {
-            console.log("vue - showGrid changed");
+            // console.log("vue - showGrid changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn, 'grid');
         },
         gridMinor: function(val) {
-            console.log("vue - gridMinor changed");
+            // console.log("vue - gridMinor changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn, 'grid');
         },
         gridMajor: function(val) {
-            console.log("vue - gridMajor changed");
+            // console.log("vue - gridMajor changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn, 'grid');
         },
         gridNice: function(val) {
-            console.log("vue - gridNice changed");
+            // console.log("vue - gridNice changed");
+            updateContourDataDebounced(this.$refs.drawContainer, this.dataFn, 'grid');
+        },
+        yDirection: function(val) {
+            // console.log("vue - yDirection changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn, 'grid');
         },
         labelFontSize: function(val) {
-            console.log("vue - labelFontSize changed");
+            // console.log("vue - labelFontSize changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
         minX: function(val) {
-            console.log("vue - minX changed");
+            // console.log("vue - minX changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
         maxX: function(val) {
-            console.log("vue - maxX changed");
+            // console.log("vue - maxX changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
         minY: function(val) {
-            console.log("vue - minY changed");
+            // console.log("vue - minY changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
         maxY: function(val) {
-            console.log("vue - maxY changed");
+            // console.log("vue - maxY changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
     },
@@ -97,6 +101,7 @@ const component = {
                 maxX: this.maxX,
                 minY: this.minY,
                 maxY: this.maxY,
+                yDirection: this.yDirection,
             }
         }
     }
@@ -126,7 +131,7 @@ function initContour(container, dataFn) {
             .attr("width", containerWidth || 500)
             .attr("height", containerHeight || 500);
 
-        drawContourSync(d3Container);
+        drawContour(d3Container);
     });
 }
 
@@ -139,7 +144,7 @@ function onCanvasZoom(d3Container, onScaleChanged) {
 const updateCanvasTransformDebounced = _.throttle(updateCanvasTransform, 20);
 function updateCanvasTransform(d3Container, transform) {
     requestAnimationFrame(() => {
-        drawContourSync(d3Container, null, transform);
+        drawContour(d3Container, null, transform);
     })
 }
 
@@ -158,13 +163,16 @@ function updateContourData(container, dataFn, forceDrawTarget=null) {
         // .domain([0, data.height])
         // .range([0, d3Canvas.node().height]);
     // projection scale
-    const gridToCoordinate = function(gridWidth, gridHeight, minX, maxX, minY, maxY) {
+    const gridToCoordinate = function(gridWidth, gridHeight, minX, maxX, minY, maxY, yDirection) {
         const scaleX = d3.scaleLinear()
             .domain([0, gridWidth])
             .range([minX, maxX]);
+
+        const _yIsUp = yDirection == 'up' ? true:false;
+        const _rangeScaleY = _yIsUp ? [maxY, minY]:[minY, maxY];
         const scaleY = d3.scaleLinear()
             .domain([0, gridHeight])
-            .range([maxY, minY]);
+            .range(_rangeScaleY);
         const invert = function(coordinate) {
             return {
                 x: scaleX.invert(coordinate.x),
@@ -204,15 +212,16 @@ function updateContourData(container, dataFn, forceDrawTarget=null) {
             height: data.height,
             nodeXToPixel: gridToScreenX,
             nodeYToPixel: gridToScreenY,
-            nodeToCoordinate: gridToCoordinate(data.width, data.height, data.minX, data.maxX, data.minY, data.maxY),
+            nodeToCoordinate: gridToCoordinate(data.width, data.height, data.minX, data.maxX, data.minY, data.maxY, data.yDirection),
             majorTick: data.gridMajor,
             minorTick: data.gridMinor,
             minX: data.minX, maxX: data.maxX,
             minY: data.minY, maxY: data.maxY,
+            yDirection: data.yDirection
         }
     })
 
-    drawContourSync(d3Container, contourData, null, forceDrawTarget);
+    drawContour(d3Container, contourData, null, forceDrawTarget);
 }
 
 function getRoundNumber(number, base, flag='up') {
@@ -224,7 +233,7 @@ function getRoundNumber(number, base, flag='up') {
 }
 
 function getGrid(contourData, transform) {
-    console.log("vue - recalculating grid");
+    console.log("%c vue - recalculating grid", 'color: red');
     const minX = contourData.grid.minX;
     const maxX = contourData.grid.maxX;
     const minY = contourData.grid.minY;
@@ -311,7 +320,7 @@ function getGrid(contourData, transform) {
 }
 
 function getPath2Ds(contourData, transform, xToPixel, yToPixel) {
-    console.log("vue - recalculating paths");
+    console.log("%c vue - recalculating paths", 'color: red');
     const path2Ds = contourData
         .map(d => contourDataToPixelMap(d, transform, xToPixel, yToPixel))
         .map((contour, i) => {
@@ -327,7 +336,7 @@ let cachedPath2Ds = [];
 let cachedContourData = [];
 let cachedTransform = null;
 let cachedGrid = null;
-function drawContourSync(d3Container, contourData, transform, force=null) {
+function drawContour(d3Container, contourData, transform, force=null) {
     const d3Canvas = d3Container.select('canvas');
     const context = d3Canvas.node().getContext("2d");
 
@@ -359,154 +368,111 @@ function drawContourSync(d3Container, contourData, transform, force=null) {
         });
     })
 
-    context.save();
-    context.clearRect(0, 0, d3Canvas.attr("width"), d3Canvas.attr("height"));
-    if (cachedTransform) {
-        context.translate(cachedTransform.x, cachedTransform.y);
-    }
+    // context.save();
+    // context.clearRect(0, 0, d3Canvas.attr("width"), d3Canvas.attr("height"));
+    // if (cachedTransform) {
+    //     context.translate(cachedTransform.x, cachedTransform.y);
+    // }
 
     //draw grid
-    if (cachedContourData.grid.show) {
-        context.lineWidth = 1;
-        context.strokeStyle = 'grey';
-        context.beginPath();
-        // draw minor ticks
-        cachedGrid.rows.filter(row => !row.isMajor).forEach(row => {
-            context.moveTo(row.lo.x, row.lo.y);
-            context.lineTo(row.hi.x, row.hi.y);
-        })
-        cachedGrid.cols.filter(col => !col.isMajor).forEach(col => {
-            context.moveTo(col.lo.x, col.lo.y);
-            context.lineTo(col.hi.x, col.hi.y);
-        })
-        context.closePath();
-        context.stroke();
-        // draw major ticks
-        context.lineWidth = 2;
-        context.strokeStyle = 'white';
-        context.fillStyle = 'white';
-        context.font = `12px SansSerif`;
-        context.beginPath();
-        context.textAlign = 'end';
-        const TEXT_PADDING = 10;
-        cachedGrid.rows.filter(row => row.isMajor).forEach(row => {
-            context.moveTo(row.lo.x, row.lo.y);
-            context.lineTo(row.hi.x, row.hi.y);
-            context.fillText(row.value, row.lo.x - TEXT_PADDING, row.lo.y);
-        })
-        context.textAlign = 'center';
-        cachedGrid.cols.filter(col => col.isMajor).forEach(col => {
-            context.moveTo(col.lo.x, col.lo.y);
-            context.lineTo(col.hi.x, col.hi.y);
-            context.fillText(col.value, col.lo.x, col.lo.y - TEXT_PADDING);
-        })
-        context.closePath();
-        context.stroke();
-    }
-
-    /*
-    context.lineWidth = 1;
-    context.strokeStyle = 'grey';
-    const gridWidth = cachedContourData.grid.width;
-    const gridHeight = cachedContourData.grid.height;
-    const zoomedScale = cachedTransform ? cachedTransform.k : 1;
-    const majorTick = 5;
-    const minorTickPerMajor = 5;
-    const unitFactorX = Math.floor(gridWidth / (majorTick * minorTickPerMajor));
-    const unitFactorY = Math.floor(gridHeight / (majorTick * minorTickPerMajor));
-    let hasBoundaryX = false;
-    let hasBoundaryY = false;
-    context.beginPath();
-    d3.range(0, gridHeight+1, 1)
-        .forEach(rowIdx => {
-            if (rowIdx % unitFactorY == 0) {
-                if (rowIdx % majorTick == 0) {
-                    const _y = gridNodeYtoPixel(rowIdx);
-                    const startPoint = { x: gridNodeXtoPixel(0), y: _y};
-                    const endPoint = { x: gridNodeXtoPixel(gridWidth), y: _y};
-                    context.moveTo(startPoint.x * zoomedScale - 10, startPoint.y * zoomedScale);
-                    context.lineTo(endPoint.x * zoomedScale + 10, endPoint.y * zoomedScale);
-                } else {
-                    const _y = gridNodeYtoPixel(rowIdx);
-                    const startPoint = { x: gridNodeXtoPixel(0), y: _y};
-                    const endPoint = { x: gridNodeXtoPixel(gridWidth), y: _y};
-                    context.moveTo(startPoint.x * zoomedScale, startPoint.y * zoomedScale);
-                    context.lineTo(endPoint.x * zoomedScale, endPoint.y * zoomedScale);
-                }
-                if (rowIdx === gridHeight) hasBoundaryY = true;
+    if (cachedContourData.grid.show && cachedGrid) {
+        requestAnimationFrame(() => {
+            context.clearRect(0, 0, d3Canvas.attr("width"), d3Canvas.attr("height"));
+            context.save();
+            if (cachedTransform) {
+                context.translate(cachedTransform.x, cachedTransform.y);
             }
+            context.lineWidth = 1;
+            context.strokeStyle = 'grey';
+            context.beginPath();
+            // draw minor ticks
+            cachedGrid.rows.filter(row => !row.isMajor).forEach(row => {
+                context.moveTo(row.lo.x, row.lo.y);
+                context.lineTo(row.hi.x, row.hi.y);
+            })
+            cachedGrid.cols.filter(col => !col.isMajor).forEach(col => {
+                context.moveTo(col.lo.x, col.lo.y);
+                context.lineTo(col.hi.x, col.hi.y);
+            })
+            context.closePath();
+            context.stroke();
+            // draw major ticks
+            context.lineWidth = 2;
+            context.strokeStyle = 'white';
+            context.fillStyle = 'white';
+            context.font = `12px SansSerif`;
+            context.beginPath();
+            context.textAlign = 'end';
+            const TEXT_PADDING = 10;
+            cachedGrid.rows.filter(row => row.isMajor).forEach(row => {
+                context.moveTo(row.lo.x, row.lo.y);
+                context.lineTo(row.hi.x, row.hi.y);
+                context.fillText(row.value, row.lo.x - TEXT_PADDING, row.lo.y);
+            })
+            context.textAlign = 'center';
+            cachedGrid.cols.filter(col => col.isMajor).forEach(col => {
+                context.moveTo(col.lo.x, col.lo.y);
+                context.lineTo(col.hi.x, col.hi.y);
+                context.fillText(col.value, col.lo.x, col.lo.y - TEXT_PADDING);
+            })
+            context.closePath();
+            context.stroke();
+            context.restore();
         })
-    d3.range(0, gridWidth+1, 1)
-        .forEach(colIdx => {
-            if (colIdx % unitFactorX == 0) {
-                if (colIdx % majorTick == 0) {
-                    const _x = gridNodeXtoPixel(colIdx);
-                    const startPoint = { x: _x, y: gridNodeYtoPixel(0)};
-                    const endPoint = { x: _x, y: gridNodeYtoPixel(gridHeight)};
-                    context.moveTo(startPoint.x * zoomedScale, startPoint.y * zoomedScale - 10);
-                    context.lineTo(endPoint.x * zoomedScale, endPoint.y * zoomedScale + 10);
-                } else {
-                    const _x = gridNodeXtoPixel(colIdx);
-                    const startPoint = { x: _x, y: gridNodeYtoPixel(0)};
-                    const endPoint = { x: _x, y: gridNodeYtoPixel(gridHeight)};
-                    context.moveTo(startPoint.x * zoomedScale, startPoint.y * zoomedScale);
-                    context.lineTo(endPoint.x * zoomedScale, endPoint.y * zoomedScale);
-                }
-                if (colIdx === gridWidth) hasBoundaryX = true;
-            }
-        })
-
-    if (!hasBoundaryX) {
-        context.moveTo(gridNodeXtoPixel(gridWidth)*zoomedScale, gridNodeYtoPixel(0)*zoomedScale);
-        context.lineTo(gridNodeXtoPixel(gridWidth)*zoomedScale, gridNodeYtoPixel(gridHeight)*zoomedScale);
     }
-    if (!hasBoundaryY) {
-        context.moveTo(gridNodeXtoPixel(0)*zoomedScale, gridNodeYtoPixel(gridHeight)*zoomedScale);
-        context.lineTo(gridNodeXtoPixel(gridWidth)*zoomedScale, gridNodeYtoPixel(gridHeight)*zoomedScale);
-    }
-
-    context.closePath();
-    context.stroke();
-    */
 
     // draw contour paths
-    context.lineWidth = 1;
-    context.strokeStyle = "black";
-    cachedPath2Ds.forEach(path => {
-        if (path.isMajor)
-            context.lineWidth = 3;
-        context.stroke(path);
-        if (path.isMajor)
-            context.lineWidth = 1;
-        context.fillStyle = path.fillColor;
-        context.fill(path);
+    requestAnimationFrame(() => {
+        context.save();
+        if (cachedTransform) {
+            context.translate(cachedTransform.x, cachedTransform.y);
+        }
+        context.lineWidth = 1;
+        context.strokeStyle = "black";
+        cachedPath2Ds.forEach(path => {
+            if (path.isMajor)
+                context.lineWidth = 3;
+            context.stroke(path);
+            if (path.isMajor)
+                context.lineWidth = 1;
+            context.fillStyle = path.fillColor;
+            context.fill(path);
 
+        })
+        context.restore();
     })
 
     if (cachedPath2Ds.showLabel) {
-        context.strokeStyle = "black";
-        context.textAlign = "center";
-        context.textBaseline = "middle";
-        context.fillStyle =  "white";
-        context.font = `${cachedPath2Ds.labelFontSize}px Sans-Serif`;
-        context.lineWidth = 1;
-        const LABEL_STEP = 30;
-        cachedPath2Ds.forEach((path) => {
-            if (path.isMajor) {
-                // draw value above path
-                path.pathData.forEach((ring) => {
-                    const points = ring[0];
-                    let i = 0;
-                    while(i < points.length) {
-                        const _points = points.slice(i, i + LABEL_STEP);
-                        context.textPath(path.value, _.flatten(_points));
-                        i+=LABEL_STEP;
-                    }
-                })
+        requestAnimationFrame(() => {
+            context.save();
+            if (cachedTransform) {
+                context.translate(cachedTransform.x, cachedTransform.y);
             }
+            context.strokeStyle = "black";
+            context.textAlign = "center";
+            context.textBaseline = "middle";
+            context.fillStyle =  "white";
+            context.font = `${cachedPath2Ds.labelFontSize}px Sans-Serif`;
+            context.lineWidth = 1;
+            const LABEL_STEP = 30;
+            cachedPath2Ds.forEach((path) => {
+                if (path.isMajor) {
+                    // draw value above path
+                    path.pathData.forEach((ring) => {
+                        const points = ring[0];
+                        let i = 0;
+                        while(i < points.length) {
+                            const _points = points.slice(i, i + LABEL_STEP);
+                            context.textPath(path.value, _.flatten(_points));
+                            i+=LABEL_STEP;
+                        }
+                    })
+                }
+            })
+            context.restore();
         })
     }
-    context.restore();
+    // context.restore();
 }
 
 function contourDataToPixelMap({type, value, coordinates}, transform, xToPixel, yToPixel) {

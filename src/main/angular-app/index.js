@@ -3,8 +3,6 @@ import "lodash";
 import * as d3 from 'd3';
 import {angularComponents} from '../../components';
 
-console.log("components to load", angularComponents);
-
 angular
     .module('myApp', angularComponents)
     .controller('rootController', ['$scope', function($scope) {
@@ -23,6 +21,7 @@ angular
         this.gridMinor = 4,
         this.gridNice = true,
         this.scale = 1,
+        this.yDirection = 'up',
 
         this.onDataChanged = function(changedData) {
             console.log('on data changed');

@@ -24,7 +24,7 @@ const makeAngularModule = function(moduleName, template, propList) {
             propList.forEach(propKey => {
                 this.vueData[propKey] = this[propKey + 'Get']();
                 $scope.$watch(this[propKey + 'Get'], () => {
-                    console.log(`${propKey} has watched changes`)
+                    // console.log(`${propKey} has watched changes`)
                     this.vueData[propKey] = this[propKey + 'Get']();
                 })
             })

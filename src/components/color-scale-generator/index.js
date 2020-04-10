@@ -52,7 +52,10 @@ const component = {
             // update scale
             this.onScaleChanged(d3.scaleLinear().domain(this.domain).range(this.range));
         },
-        updateVertices: function(minVertex, maxVertex) {
+        updateVertices: function(_minVertex, _maxVertex) {
+            const minVertex = _.isFinite(_minVertex) ? _minVertex : 0;
+            const maxVertex = _.isFinite(_maxVertex) ? _maxVertex : minVertex + 1;
+
             const extent = d3.extent(this.domain);
             if (extent[0] == minVertex && extent[1] == maxVertex) return;
             const scaleFn = d3.scaleLinear()
