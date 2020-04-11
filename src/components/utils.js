@@ -22,11 +22,13 @@ const makeAngularModule = function(moduleName, template, propList) {
         this.vueMethods = {};
         this.$onInit = function() {
             propList.forEach(propKey => {
-                this.vueData[propKey] = this[propKey + 'Get']();
-                $scope.$watch(this[propKey + 'Get'], () => {
-                    // console.log(`${propKey} has watched changes`)
+                if (typeof(this[propKey + 'Get']) == 'function') {
                     this.vueData[propKey] = this[propKey + 'Get']();
-                })
+                    $scope.$watch(this[propKey + 'Get'], () => {
+                        // console.log(`${propKey} has watched changes`)
+                        this.vueData[propKey] = this[propKey + 'Get']();
+                    })
+                }
             })
         }
     }

@@ -11,18 +11,25 @@ const component = {
         "labelFontSize", "showLabel",
         "showGrid", "gridMajor", "gridMinor", "gridNice",
         "minX", "maxX", "minY", "maxY",
-        'onScaleChanged', 'yDirection', "showScale"
+        'onScaleChanged', 'yDirection', "showScale",
+        'wells', "showWell",
+        'trajectories', 'showTrajectory',
+        'onComponentMounted'
     ],
     template,
     mounted() {
         this.$nextTick(() => {
-            initContour(this.$refs.drawContainer, this.dataFn);
+            this.__contour = initContour(this.$refs.drawContainer, this.dataFn);
+            this.onComponentMounted(this);
         })
     },
     watch: {
-        values: function(val) {
-            // console.log("vue - values changed");
-            updateContourData(this.$refs.drawContainer, this.dataFn, 'all');
+        values: {
+            handler: function(val) {
+                // console.log("vue - values changed");
+                updateContourData(this.$refs.drawContainer, this.dataFn, 'all');
+            },
+            deep: false,
         },
         colorScale: function() {
             // console.log("vue - colorScale changed")
@@ -42,7 +49,7 @@ const component = {
         },
         showGrid: function(val) {
             // console.log("vue - showGrid changed");
-            updateContourDataDebounced(this.$refs.drawContainer, this.dataFn, 'grid');
+            updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
         gridMinor: function(val) {
             // console.log("vue - gridMinor changed");
@@ -84,11 +91,60 @@ const component = {
             // console.log("vue - maxY changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
+        wells: {
+            handler: function(val) {
+                // console.log("vue - wells changed");
+                updateContourDataDebounced(this.$refs.drawContainer, this.dataFn, 'well');
+            },
+            deep: true
+        },
+        showWell: function(val) {
+            // console.log("vue - showWells changed");
+            updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
+        },
+        trajectories: {
+            handler: function(val) {
+                // console.log("vue - trajectories changed");
+                updateContourDataDebounced(this.$refs.drawContainer, this.dataFn, 'trajectory');
+            },
+            deep: true
+        },
+        showTrajectory: function(val) {
+            // console.log("vue - showTrajectory changed");
+            updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
+        }
     },
     methods: {
+        setCenter: function(xCoord, yCoord) {
+            // console.log(`vue - setting center to (${xCoord}, ${yCoord})`);
+            if (!_.isFinite(xCoord) || !_.isFinite(yCoord)) return;
+            // neccessary transforms
+            const canvasDOM = this.__contour.d3Canvas.node();
+            const zoomBehavior = this.__contour.zoomBehavior;
+            const nodeToPixelX = canvasDOM.__nodeToPixelX;
+            const nodeToPixelY = canvasDOM.__nodeToPixelY;
+            const nodeToCoord = canvasDOM.__gridToCoordinate;
+
+            const nodeCoord = nodeToCoord.invert({x: xCoord, y: yCoord});
+            const pixelX = nodeToPixelX(nodeCoord.x);
+            const pixelY = nodeToPixelY(nodeCoord.y);
+            const transformed = d3.zoomTransform(canvasDOM);
+
+            const addX = (canvasDOM.width/2 - (pixelX * transformed.k  + transformed.x)) / transformed.k;
+            const addY = (canvasDOM.height/2 - (pixelY * transformed.k + transformed.y)) / transformed.k;
+
+            if (!_.isFinite(addX) || !_.isFinite(addY)) return;
+
+            zoomBehavior.translateBy(this.__contour.d3Canvas, addX, addY);
+        },
+        setScale: function(scale) {
+            this.__contour.zoomBehavior.scaleTo(this.__contour.d3Canvas, scale);
+        },
         dataFn: function() {
             return {
                 values: this.values,
+                wells: this.wells,
+                trajectories: this.trajectories,
                 width: this.nRows,
                 height: this.nCols,
                 step: this.step,
@@ -107,6 +163,10 @@ const component = {
                 maxY: this.maxY,
                 yDirection: this.yDirection,
                 showScale: this.showScale,
+                showWell: this.showWell,
+                showTrajectory: this.showTrajectory,
+                centerCoordinate: this.centerCoordinate,
+                scale: this.scale,
             }
         }
     }
@@ -138,6 +198,7 @@ function initContour(container, dataFn) {
 
         drawContour(d3Container);
     });
+    return { d3Canvas, zoomBehavior };
 }
 
 function onCanvasZoom(d3Container, onScaleChanged) {
@@ -167,6 +228,7 @@ function updateContourData(container, dataFn, forceDrawTarget=null) {
     const gridToScreenY = d3.scaleLinear()
         // .domain([0, data.height])
         // .range([0, d3Canvas.node().height]);
+
     // projection scale
     const gridToCoordinate = function(gridWidth, gridHeight, minX, maxX, minY, maxY, yDirection) {
         const scaleX = d3.scaleLinear()
@@ -205,12 +267,17 @@ function updateContourData(container, dataFn, forceDrawTarget=null) {
         .size([data.width, data.height])
         .thresholds(threshold)
         (data.values);
+    const gridToCoordinateTransform = gridToCoordinate(data.width, data.height, data.minX, data.maxX, data.minY, data.maxY, data.yDirection);
     Object.assign(contourData, {
         majorEvery: data.majorEvery,
         showLabel: data.showLabel,
         showScale: data.showScale,
+        showTrajectory: data.showTrajectory,
+        showWell: data.showWell,
         labelFontSize: data.labelFontSize,
         colorScale: data.colorScale,
+        wells: data.wells,
+        trajectories: data.trajectories,
         grid: {
             show: data.showGrid,
             nice: data.gridNice,
@@ -218,7 +285,7 @@ function updateContourData(container, dataFn, forceDrawTarget=null) {
             height: data.height,
             nodeXToPixel: gridToScreenX,
             nodeYToPixel: gridToScreenY,
-            nodeToCoordinate: gridToCoordinate(data.width, data.height, data.minX, data.maxX, data.minY, data.maxY, data.yDirection),
+            nodeToCoordinate: gridToCoordinateTransform,
             majorTick: data.gridMajor,
             minorTick: data.gridMinor,
             minX: data.minX, maxX: data.maxX,
@@ -226,6 +293,12 @@ function updateContourData(container, dataFn, forceDrawTarget=null) {
             yDirection: data.yDirection
         }
     })
+
+    // temporary save transform
+    const canvasDOM = d3Canvas.node();
+    canvasDOM.__nodeToPixelX = gridToScreenX;
+    canvasDOM.__nodeToPixelY = gridToScreenY;
+    canvasDOM.__gridToCoordinate = gridToCoordinateTransform;
 
     drawContour(d3Container, contourData, null, forceDrawTarget);
 }
@@ -239,7 +312,7 @@ function getRoundNumber(number, base, flag='up') {
 }
 
 function getGrid(contourData, transform) {
-    console.log("%c vue - recalculating grid", 'color: red');
+    // console.log("%c vue - recalculating grid", 'color: red');
     const minX = contourData.grid.minX;
     const maxX = contourData.grid.maxX;
     const minY = contourData.grid.minY;
@@ -326,7 +399,7 @@ function getGrid(contourData, transform) {
 }
 
 function getPath2Ds(contourData, transform, xToPixel, yToPixel) {
-    console.log("%c vue - recalculating paths", 'color: red');
+    // console.log("%c vue - recalculating paths", 'color: red');
     const path2Ds = contourData
         .map(d => contourDataToPixelMap(d, transform, xToPixel, yToPixel))
         .map((contour, i) => {
@@ -340,6 +413,7 @@ function getPath2Ds(contourData, transform, xToPixel, yToPixel) {
 
 const SCALE_INDICATOR_MAX_WIDTH = 100; // 100px
 function getScalePosition(contourData, transform, d3Canvas) {
+    // console.log("%c vue - recalculating scale", 'color: red');
     const screenWidth = d3Canvas.node().width;
     const screenHeight = d3Canvas.node().height;
     const nodeXToPixel = contourData.grid.nodeXToPixel;
@@ -398,8 +472,57 @@ function getScalePosition(contourData, transform, d3Canvas) {
     };
 }
 
+function getWellsPosition(contourData, transform) {
+    // console.log("%c vue - recalculating wells", 'color: red');
+    const wPos = [];
+    const wells = contourData.wells || [];
+    const nodeXToPixel = contourData.grid.nodeXToPixel;
+    const nodeYToPixel = contourData.grid.nodeYToPixel;
+    const zoomedScale = transform ? transform.k : 1;
+    const nodeCellToZoneCoordinate = contourData.grid.nodeToCoordinate;
+
+    wells.forEach(well => {
+        const nodePos = nodeCellToZoneCoordinate.invert({x: well.xCoord, y: well.yCoord});
+        wPos.push({
+            x: nodeXToPixel(nodePos.x) * zoomedScale,
+            y: nodeYToPixel(nodePos.y) * zoomedScale,
+            well
+        })
+    })
+
+    return wPos;
+}
+
+function getTrajectoriesPosition(contourData, transform) {
+    // console.log("%c vue - recalculating trajectories", 'color: red');
+    const tPos = [];
+    const trajectories = contourData.trajectories || [];
+    const nodeXToPixel = contourData.grid.nodeXToPixel;
+    const nodeYToPixel = contourData.grid.nodeYToPixel;
+    const zoomedScale = transform ? transform.k : 1;
+    const nodeCellToZoneCoordinate = contourData.grid.nodeToCoordinate;
+
+    trajectories.forEach(trajectory => {
+        const points = trajectory.points.map(p => {
+            const nodePos = nodeCellToZoneCoordinate.invert({x: p.xCoord, y: p.yCoord});
+            return {
+                x: nodeXToPixel(nodePos.x) * zoomedScale,
+                y: nodeYToPixel(nodePos.y) * zoomedScale,
+            }
+        });
+        tPos.push({
+            points,
+            trajectory
+        });
+    })
+
+    return tPos;
+}
+
 let cachedPath2Ds = [];
 let cachedContourData = [];
+let cachedWellsPosition = [];
+let cachedTrajectoriesPosition = [];
 let cachedTransform = null;
 let cachedGrid = null;
 let cachedScalePosition = null;
@@ -427,6 +550,14 @@ function drawContour(d3Container, contourData, transform, force=null) {
     cachedScalePosition = (scaleChanged || force=="all" || force=="scale")
         ? getScalePosition(cachedContourData, cachedTransform, d3Canvas)
         : cachedScalePosition;
+
+    cachedWellsPosition = (scaleChanged || force=="all" || force=="well")
+        ? getWellsPosition(cachedContourData, cachedTransform)
+        : cachedWellsPosition;
+
+    cachedTrajectoriesPosition = (scaleChanged || force=="all" || force=="trajectory")
+        ? getTrajectoriesPosition(cachedContourData, cachedTransform)
+        : cachedTrajectoriesPosition;
 
     // editing props
     cachedPath2Ds.showLabel = cachedContourData.showLabel;
@@ -559,7 +690,7 @@ function drawContour(d3Container, contourData, transform, force=null) {
             context.lineWidth = 2;
             context.strokeStyle = 'white';
             context.fillStyle = 'white';
-            context.font = `12px SansSerif`;
+            context.font = `12px Sans-Serif`;
             context.textAlign = 'end';
 
             context.beginPath()
@@ -585,6 +716,58 @@ function drawContour(d3Container, contourData, transform, force=null) {
             context.translate(endY.x, endY.y)
             context.rotate(-90 * Math.PI / 180);
             context.fillText(endY.value, -5, 0);
+
+            context.closePath();
+            context.restore();
+        })
+    }
+
+    if (cachedContourData.showWell && cachedWellsPosition.length) {
+        requestAnimationFrame(() => {
+            // console.log("vue - well indicator", cachedScalePosition);
+            context.save();
+            if (cachedTransform) {
+                context.translate(cachedTransform.x, cachedTransform.y);
+            }
+            const SYMBOL_SIZE = 5;
+            const FONT_SIZE = 12;
+
+            context.textAlign = 'center';
+            context.font = `${FONT_SIZE}px Sans-Serif`;
+            cachedWellsPosition.forEach(wellPos => {
+                context.beginPath();
+                context.arc(wellPos.x, wellPos.y, SYMBOL_SIZE / 2, 0, 2 * Math.PI, false);
+                context.fillStyle = wellPos.well.color || 'lightgreen';
+                context.closePath();
+                context.fill();
+                context.fillText(wellPos.well.name, wellPos.x, wellPos.y - 10);
+            })
+            context.restore();
+        })
+    }
+
+    if (cachedContourData.showTrajectory && cachedTrajectoriesPosition.length) {
+        requestAnimationFrame(() => {
+            // console.log("vue - trjectory indicator", cachedScalePosition);
+            context.save();
+            if (cachedTransform) {
+                context.translate(cachedTransform.x, cachedTransform.y);
+            }
+
+            const trajectories = cachedTrajectoriesPosition || [];
+            trajectories.forEach(t => {
+                if (!t.points.length || t.points.length == 1) return;
+                context.strokeStyle = t.trajectory.color || 'steelblue';
+                context.lineWidth = t.trajectory.lineWidth || 1;
+                context.beginPath();
+                t.points.forEach((tp, tpIdx) => {
+                    if(tpIdx == 0)
+                        context.moveTo(tp.x, tp.y);
+                    else
+                        context.lineTo(tp.x, tp.y);
+                })
+                context.stroke();
+            })
 
             context.restore();
         })

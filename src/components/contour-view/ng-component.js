@@ -16,8 +16,11 @@ const template = `
         :color-scale="colorScale" :step="step" :major-every="majorEvery"
         :show-grid="showGrid" :grid-major="gridMajor" :grid-minor="gridMinor"
         :grid-nice="gridNice" :y-direction="yDirection"
-        :show-scale='showScale'
-        :show-label="showLabel" :label-font-size="labelFontSize" :on-scale-changed="onScaleChanged">
+        :show-scale='showScale' :wells='wells' :show-well='showWell'
+        :show-trajectory='showTrajectory' :trajectories='trajectories'
+        :show-label="showLabel" :label-font-size="labelFontSize"
+        :on-component-mounted="onComponentMounted"
+        :on-scale-changed="onScaleChanged">
     </contour-view>
 `;
 makeAngularModule(moduleName, template, propList);

@@ -26,9 +26,15 @@
                 show-scale-get="rootCtrl.getter('showScale')"
                 label-font-size-get="rootCtrl.getter('fontSize')"
                 y-direction-get="rootCtrl.getter('yDirection')"
+                wells-get="rootCtrl.getter('wells')"
+                show-well-get="rootCtrl.getter('showWell')"
+                trajectories-get="rootCtrl.getter('trajectories')"
+                show-trajectory-get="rootCtrl.getter('showTrajectory')"
+                on-component-mounted-get="rootCtrl.getter('onContourViewMounted')"
                 on-scale-changed-get="rootCtrl.getter('onScaleChanged')">
             </contour-view>
             </div>
+            <button ng-click="rootCtrl.makeCenter()">Center map</button>
             <contour-file-import
                 on-data-changed-get="rootCtrl.getter('onDataChanged')">
             </contour-file-import>
@@ -38,10 +44,23 @@
                 max-val-get="rootCtrl.getter('maxValue')">
             </color-scale-generator>
             <div>
-                <label>Scale</label>
-                <span>{{rootCtrl.scale}}</span>
+                <label>Show Trajectory</label>
+                <input type="checkbox" ng-model="rootCtrl.showTrajectory"/>
+                <br/>
+                <label>Show Well</label>
+                <input type="checkbox" ng-model="rootCtrl.showWell"/>
+                <button ng-click="rootCtrl.addRandomWell()">Add Well</button>
+                <button ng-click="rootCtrl.removeRandomWell()">Remove Well</button>
+                <button ng-click="rootCtrl.changeRandomWell()">Change Well</button>
+                <br/>
+                <label>Wells</label>
+                <span>{{rootCtrl.wells}}</span>
+                <br/>
                 <label>Show Scale</label>
                 <input type="checkbox" ng-model="rootCtrl.showScale"/>
+                <label>Scale</label>
+                <span>{{rootCtrl.scale}}</span>
+                <button ng-click="rootCtrl.changeRandomScale()">Change Scale</button>
                 <br/>
                 <label>Color Scale</label>
                 <div>{{rootCtrl.colorScale.domain()}}</div>
