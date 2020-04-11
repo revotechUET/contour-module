@@ -13,6 +13,14 @@ module.exports = {
     optimization: {
         minimize: isDev ? false:true
     },
+    devServer: {
+        contentBase: __dirname + '/dist',
+        watchContentBase: true,
+        compress: true,
+        bonjour: true,
+        clientLogLevel: 'debug',
+        port: 3000
+    },
     entry: {
         main: `./main/${target}/index.js`
     },

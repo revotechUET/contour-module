@@ -27,6 +27,8 @@ new Vue({
         gridMinor: 4,
         gridNice: true,
         scale: 1,
+        showScale: true,
+        yDirection: 'up'
     },
     methods: {
         onDataChanged: function(changedData) {

@@ -18,11 +18,14 @@
     "style-loader": "^1.1.3",
     "url-loader": "^4.0.0",
     "webpack": "^4.42.1",
-    "webpack-cli": "^3.3.11"
+    "webpack-cli": "^3.3.11",
+    "webpack-dev-server": "^3.10.3"
   },
   "scripts": {
+    "serve": "export BUILD_ENV=dev && webpack-dev-server --color --config webpack.conf.js",
     "build": "export BUILD_ENV=dev && webpack --config webpack.conf.js",
     "prod": "export BUILD_ENV=prod && webpack --config webpack.conf.js",
+    "serve-angular": "export BUILD_ENV=dev && export BUILD_TARGET=angular-app && webpack-dev-server --color --config webpack.conf.js",
     "build-angular": "export BUILD_ENV=dev && export BUILD_TARGET=angular-app && webpack --config webpack.conf.js",
     "prod-angular": "export BUILD_ENV=prod && export BUILD_TARGET=angular-app && webpack --config webpack.conf.js"
   },

@@ -11,7 +11,7 @@ const component = {
         "labelFontSize", "showLabel",
         "showGrid", "gridMajor", "gridMinor", "gridNice",
         "minX", "maxX", "minY", "maxY",
-        'onScaleChanged', 'yDirection'
+        'onScaleChanged', 'yDirection', "showScale"
     ],
     template,
     mounted() {
@@ -64,6 +64,10 @@ const component = {
             // console.log("vue - labelFontSize changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
+        showScale: function(val) {
+            // console.log("vue - showScale changed");
+            updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
+        },
         minX: function(val) {
             // console.log("vue - minX changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
@@ -102,6 +106,7 @@ const component = {
                 minY: this.minY,
                 maxY: this.maxY,
                 yDirection: this.yDirection,
+                showScale: this.showScale,
             }
         }
     }
@@ -168,7 +173,7 @@ function updateContourData(container, dataFn, forceDrawTarget=null) {
             .domain([0, gridWidth])
             .range([minX, maxX]);
 
-        const _yIsUp = yDirection == 'up' ? true:false;
+        const _yIsUp = yDirection == 'up';
         const _rangeScaleY = _yIsUp ? [maxY, minY]:[minY, maxY];
         const scaleY = d3.scaleLinear()
             .domain([0, gridHeight])
@@ -203,6 +208,7 @@ function updateContourData(container, dataFn, forceDrawTarget=null) {
     Object.assign(contourData, {
         majorEvery: data.majorEvery,
         showLabel: data.showLabel,
+        showScale: data.showScale,
         labelFontSize: data.labelFontSize,
         colorScale: data.colorScale,
         grid: {
@@ -332,10 +338,71 @@ function getPath2Ds(contourData, transform, xToPixel, yToPixel) {
     return path2Ds;
 }
 
+const SCALE_INDICATOR_MAX_WIDTH = 100; // 100px
+function getScalePosition(contourData, transform, d3Canvas) {
+    const screenWidth = d3Canvas.node().width;
+    const screenHeight = d3Canvas.node().height;
+    const nodeXToPixel = contourData.grid.nodeXToPixel;
+    const nodeYToPixel = contourData.grid.nodeYToPixel;
+    const zoomedScale = transform ? transform.k : 1;
+    const nodeCellToZoneCoordinate = contourData.grid.nodeToCoordinate;
+
+    const step = Math.pow(10, Math.floor(Math.log10(zoomedScale % 10)));
+
+    // get scale indicator for x dimension
+    let cellUnit = step;
+    while(nodeXToPixel(cellUnit) * zoomedScale < SCALE_INDICATOR_MAX_WIDTH)
+        cellUnit += step;
+
+    const rootCoordinateValue = nodeCellToZoneCoordinate({x: 0, y: 0});
+    let cellUnitCoordinateValue = nodeCellToZoneCoordinate({x: cellUnit, y: cellUnit});
+
+    const _valueX = _.round(cellUnitCoordinateValue.x - rootCoordinateValue.x, 1);
+    const startX = {
+        x: (screenWidth) - 30 - nodeXToPixel(cellUnit) * zoomedScale,
+        y: (screenHeight) - 30,
+        value: _valueX,
+    }
+    const endX = {
+        x: (screenWidth) - 30,
+        y: (screenHeight) - 30,
+        value: _valueX
+        // value: _.round(cellUnit, 2)
+    }
+
+    // get scale indicator for y dimension
+    cellUnit = step;
+    while(nodeYToPixel(cellUnit) * zoomedScale < SCALE_INDICATOR_MAX_WIDTH)
+        cellUnit += step;
+    cellUnitCoordinateValue = nodeCellToZoneCoordinate({x: cellUnit, y: cellUnit});
+
+    const _yIsUp = contourData.yDirection == 'up';
+    const _valueY = Math.abs(_.round(cellUnitCoordinateValue.y - rootCoordinateValue.y, 1));
+    const startY = {
+        x: (screenWidth) - 30,
+        y: (screenHeight) - 40 - nodeYToPixel(cellUnit) * zoomedScale,
+        value: _valueY,
+        // value: _.round(cellUnit, 2)
+    }
+    const endY = {
+        x: (screenWidth) - 30,
+        y: (screenHeight) - 40,
+        value: _valueY
+        // value: _.round(cellUnit, 2)
+    }
+
+    return {
+        startX, endX,
+        loY: _yIsUp ? startY:endY,
+        hiY: _yIsUp ? endY:startY
+    };
+}
+
 let cachedPath2Ds = [];
 let cachedContourData = [];
 let cachedTransform = null;
 let cachedGrid = null;
+let cachedScalePosition = null;
 function drawContour(d3Container, contourData, transform, force=null) {
     const d3Canvas = d3Container.select('canvas');
     const context = d3Canvas.node().getContext("2d");
@@ -355,7 +422,11 @@ function drawContour(d3Container, contourData, transform, force=null) {
         : cachedPath2Ds;
     cachedGrid = (scaleChanged || force=="all" || force=="grid")
         ? getGrid(cachedContourData, cachedTransform)
-        :cachedGrid;
+        : cachedGrid;
+
+    cachedScalePosition = (scaleChanged || force=="all" || force=="scale")
+        ? getScalePosition(cachedContourData, cachedTransform, d3Canvas)
+        : cachedScalePosition;
 
     // editing props
     cachedPath2Ds.showLabel = cachedContourData.showLabel;
@@ -419,6 +490,10 @@ function drawContour(d3Container, contourData, transform, force=null) {
             context.stroke();
             context.restore();
         })
+    } else {
+        requestAnimationFrame(() => {
+            context.clearRect(0, 0, d3Canvas.attr("width"), d3Canvas.attr("height"));
+        })
     }
 
     // draw contour paths
@@ -472,6 +547,49 @@ function drawContour(d3Container, contourData, transform, force=null) {
             context.restore();
         })
     }
+
+    // draw scale indicator
+    if (cachedContourData.showScale) {
+        requestAnimationFrame(() => {
+            // console.log("vue - scale indicator", cachedScalePosition);
+            context.save();
+            // if (cachedTransform) {
+            //     context.translate(cachedTransform.x, cachedTransform.y);
+            // }
+            context.lineWidth = 2;
+            context.strokeStyle = 'white';
+            context.fillStyle = 'white';
+            context.font = `12px SansSerif`;
+            context.textAlign = 'end';
+
+            context.beginPath()
+
+            const startX = cachedScalePosition.startX;
+            const endX = cachedScalePosition.endX;
+            context.moveTo(startX.x, startX.y);
+            context.lineTo(startX.x, startX.y + 10);
+            context.lineTo(endX.x, endX.y + 10);
+            context.lineTo(endX.x, endX.y);
+
+            const startY = cachedScalePosition.loY;
+            const endY = cachedScalePosition.hiY;
+            context.moveTo(startY.x, startY.y);
+            context.lineTo(startY.x + 10, startY.y);
+            context.lineTo(endY.x + 10, endY.y);
+            context.lineTo(endY.x, endY.y);
+            // context.closePath();
+            context.stroke();
+            // context.fillText(start.value, start.x, start.y - 10);
+            context.fillText(endX.value, endX.x - 5, endX.y);
+
+            context.translate(endY.x, endY.y)
+            context.rotate(-90 * Math.PI / 180);
+            context.fillText(endY.value, -5, 0);
+
+            context.restore();
+        })
+    }
+
     // context.restore();
 }
 

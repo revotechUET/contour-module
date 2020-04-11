@@ -16,6 +16,7 @@ const template = `
         :color-scale="colorScale" :step="step" :major-every="majorEvery"
         :show-grid="showGrid" :grid-major="gridMajor" :grid-minor="gridMinor"
         :grid-nice="gridNice" :y-direction="yDirection"
+        :show-scale='showScale'
         :show-label="showLabel" :label-font-size="labelFontSize" :on-scale-changed="onScaleChanged">
     </contour-view>
 `;

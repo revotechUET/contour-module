@@ -6,6 +6,7 @@
         :min-y="headers.minY" :max-y="headers.maxY"
         :color-scale="colorScale" :step="step" :major-every="majorEvery"
         :show-grid="showGrid" :grid-major="gridMajor" :grid-minor="gridMinor" :grid-nice="gridNice"
+        :y-direction="yDirection" :show-scale="showScale"
         :show-label="showLabel" :label-font-size="fontSize" :on-scale-changed="(_scl) => scale = _scl">
     </contour-view>
     </div>
@@ -14,6 +15,8 @@
     <div>
         <label>Scale</label>
         <span>{{scale}}</span>
+        <label>show Scale</label>
+        <input type="checkbox" v-model="showScale"/>
         <br/>
         <label>Contour Step</label>
         <input type="number" v-model="step"/>
@@ -33,5 +36,7 @@
         <input type="number" v-model="gridMinor"/>
         <label>Grid Nice Tick</label>
         <input type="checkbox" v-model="gridNice"/>
+        <label>yDirection</label>
+        <input type="text" v-model="yDirection"/>
     </div>
 </fragment>

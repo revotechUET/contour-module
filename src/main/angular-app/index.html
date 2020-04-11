@@ -23,6 +23,7 @@
                 grid-minor-get="rootCtrl.getter('gridMinor')"
                 grid-nice-get="rootCtrl.getter('gridNice')"
                 show-label-get="rootCtrl.getter('showLabel')"
+                show-scale-get="rootCtrl.getter('showScale')"
                 label-font-size-get="rootCtrl.getter('fontSize')"
                 y-direction-get="rootCtrl.getter('yDirection')"
                 on-scale-changed-get="rootCtrl.getter('onScaleChanged')">
@@ -39,6 +40,8 @@
             <div>
                 <label>Scale</label>
                 <span>{{rootCtrl.scale}}</span>
+                <label>Show Scale</label>
+                <input type="checkbox" ng-model="rootCtrl.showScale"/>
                 <br/>
                 <label>Color Scale</label>
                 <div>{{rootCtrl.colorScale.domain()}}</div>
