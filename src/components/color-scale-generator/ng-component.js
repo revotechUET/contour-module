@@ -10,8 +10,7 @@ const propList = Array.isArray(vueComponent.props) ? vueComponent.props : Object
 const template = `
     <color-scale-generator
         ng-non-bindable
-        :bar-height="barHeight"
-        :on-scale-changed="onScaleChanged" :min-val="minVal" :max-val="maxVal">
+        :bar-height="barHeight" :on-scale-changed="onScaleChanged" :min-val="minVal" :max-val="maxVal">
     </color-scale-generator>
 `;
 makeAngularModule(moduleName, template, propList);

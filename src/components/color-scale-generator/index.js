@@ -5,13 +5,15 @@ import template from "./template.html";
 const componentName = "color-scale-generator";
 
 const component = {
-    // props: ['onScaleChanged', 'minVal', 'maxVal'],
+    props: ['onScaleChanged', 'minVal', 'maxVal', 'barHeight'],
+    /*
     props: {
         'onScaleChanged': Function,
         'minVal': Number,
         'maxVal': Number,
         'barHeight': Number
     },
+    */
     data: function() {
         return {
             domain: [],
@@ -23,16 +25,18 @@ const component = {
     mounted() {
         this.$nextTick(() => {
             const d3Container = d3.select(this.$refs.colorBar);
+            const barHeight = this.barHeight || 50;
+            console.log('setting bar height', barHeight);
             // create handles for color stops
             const d3Svg = d3Container.append("svg")
                     .style('position', 'absolute')
                     .style('overflow', 'visible')
                     .style('width', d3Container.node().offsetWidth || 100)
-                    .style('height', this.barHeight || 75);
+                    .style('height', barHeight + 25);
             // draw color gradient
             const d3Canvas = d3Container.append('canvas')
                     .attr('width', d3Container.node().offsetWidth || 100)
-                    .attr('height', this.barHeight || 50);
+                    .attr('height', barHeight);
 
             // sample palette
             this.domain = [this.minVal, this.maxVal];

@@ -28,6 +28,8 @@ const makeAngularModule = function(moduleName, template, propList) {
                         // console.log(`${propKey} has watched changes`)
                         this.vueData[propKey] = this[propKey + 'Get']();
                     })
+                } else {
+                    this.vueData[propKey] = null;
                 }
             })
         }
