@@ -22,7 +22,7 @@ const component = {
             // create handles for color stops
             const d3Svg = d3Container.append("svg")
                     .style('position', 'absolute')
-                    .style('overflow', 'hidden')
+                    .style('overflow', 'visible')
                     .style('width', d3Container.node().offsetWidth || 100)
                     .style('height', barHeight + 25);
             // draw color gradient
