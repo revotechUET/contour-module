@@ -9,7 +9,8 @@ const component = {
     props: {
         'onScaleChanged': Function,
         'minVal': Number,
-        'maxVal': Number
+        'maxVal': Number,
+        'barHeight': Number
     },
     data: function() {
         return {
@@ -26,12 +27,12 @@ const component = {
             const d3Svg = d3Container.append("svg")
                     .style('position', 'absolute')
                     .style('overflow', 'visible')
-                    .style('width', d3Container.node().offsetWidth)
-                    .style('height', 90);
+                    .style('width', d3Container.node().offsetWidth || 100)
+                    .style('height', this.barHeight || 75);
             // draw color gradient
             const d3Canvas = d3Container.append('canvas')
-                    .attr('width', d3Container.node().offsetWidth)
-                    .attr('height', 50);
+                    .attr('width', d3Container.node().offsetWidth || 100)
+                    .attr('height', this.barHeight || 50);
 
             // sample palette
             this.domain = [this.minVal, this.maxVal];
@@ -41,6 +42,15 @@ const component = {
 
             this.colorHandles = new ColorHandles(d3Svg, this.onColorStopsChanged);
             this.colorHandles.updateColorStops(this.domain, this.range);
+
+            window.addEventListener('resize', (e) => {
+                const d3Container = d3.select(this.$refs.colorBar);
+                const containerWidth = d3Container.node().offsetWidth;
+                d3Svg.style('width', containerWidth || 100);
+                d3Canvas.attr('width', containerWidth || 100);
+                this.colorBar.redraw(this.domain, this.range);
+                this.colorHandles.updateColorStops(this.domain, this.range);
+            })
 
         })
     },
