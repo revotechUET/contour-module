@@ -5,15 +5,7 @@ import template from "./template.html";
 const componentName = "color-scale-generator";
 
 const component = {
-    props: ['onScaleChanged', 'minVal', 'maxVal', 'barHeight'],
-    /*
-    props: {
-        'onScaleChanged': Function,
-        'minVal': Number,
-        'maxVal': Number,
-        'barHeight': Number
-    },
-    */
+    props: ['onScaleChanged', 'minVal', 'maxVal', 'barHeight', 'onComponentMounted'],
     data: function() {
         return {
             domain: [],
@@ -26,7 +18,6 @@ const component = {
         this.$nextTick(() => {
             const d3Container = d3.select(this.$refs.colorBar);
             const barHeight = this.barHeight || 50;
-            console.log('setting bar height', barHeight);
             // create handles for color stops
             const d3Svg = d3Container.append("svg")
                     .style('position', 'absolute')
@@ -48,7 +39,6 @@ const component = {
             this.colorHandles.updateColorStops(this.domain, this.range);
 
             window.addEventListener('resize', (e) => {
-                const d3Container = d3.select(this.$refs.colorBar);
                 const containerWidth = d3Container.node().offsetWidth;
                 d3Svg.style('width', containerWidth || 100);
                 d3Canvas.attr('width', containerWidth || 100);
@@ -56,9 +46,26 @@ const component = {
                 this.colorHandles.updateColorStops(this.domain, this.range);
             })
 
+            if (typeof(this.onComponentMounted) == 'function')
+                this.onComponentMounted(this);
         })
     },
     methods: {
+        redraw: function(redrawContainer) {
+            if (redrawContainer) {
+                const d3Container = d3.select(this.$refs.colorBar);
+                const barHeight = this.barHeight || 50;
+                d3Container.select('canvas')
+                    .attr('width', d3Container.node().offsetWidth || 100)
+                    .attr('height', barHeight);
+                d3Container.select(svg)
+                    .style('width', d3Container.node().offsetWidth || 100)
+                    .attr('height', barHeight);
+            }
+
+            this.colorBar.redraw(this.domain, this.range);
+            this.colorHandles.redraw(this.domain, this.range);
+        },
         onColorStopsChanged: function(domain, range) {
             this.domain = domain;
             this.range = range;
@@ -87,13 +94,17 @@ const component = {
     },
     watch: {
         minVal: function(val) {
-            console.log("vue - colorGenerator: minVal changed");
+            // console.log("vue - colorGenerator: minVal changed");
             this.updateVertices(this.minVal, this.maxVal);
         },
         maxVal: function(val) {
-            console.log("vue - colorGenerator: maxVal changed");
+            // console.log("vue - colorGenerator: maxVal changed");
             this.updateVertices(this.minVal, this.maxVal);
         },
+        barHeight: function(val) {
+            // console.log("vue - colorGenerator: maxVal changed");
+            this.redraw(true);
+        }
     }
 }
 Vue.component(componentName, component);
@@ -129,7 +140,7 @@ function ColorHandles(d3Svg, onColorStopChanges) {
     }
 
     this.d3Svg.on('click', function() {
-        console.log('bar click',d3.event);
+        if (!d3.event.ctrlKey) return;
         const newValue = handler.transformX.invert(d3.event.x);
         const newColor = 'red';
         const domain = handler.colorStops.map(colorStop => colorStop.__value);
@@ -194,17 +205,17 @@ function ColorHandles(d3Svg, onColorStopChanges) {
 
         rect.on('click', function() {
             d3.event.stopPropagation();
-            if(d3.event.ctrlKey) {
+            if(d3.event.shiftKey) {
                 deleteFn();
             };
         })
 
         colorIndicator.on('click', function() {
             d3.event.stopPropagation();
-            if(d3.event.ctrlKey) {
+            if(d3.event.shiftKey) {
                 deleteFn();
                 return;
-            };
+            } else if (!d3.event.ctrlKey) return;
             openColorPicker(d3.select(this).style('fill'))
                 .then(color => {
                     d3.select(this).style('fill', color);
