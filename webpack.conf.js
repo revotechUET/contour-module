@@ -15,7 +15,7 @@ if (isDev)
 module.exports = {
     context: __dirname + '/src',
     mode: isDev ? "development":"production",
-    devtool: isDev ? "cheap-module-eval-source-map":false,
+    devtool: (isDev || true) ? "cheap-module-eval-source-map":false,
     optimization: {
         minimize: isDev ? false:true
     },
