@@ -1,7 +1,7 @@
 import angular from 'angular';
 import "lodash";
 import * as d3 from 'd3';
-import {angularComponents} from '../../components';
+import angularComponents from '../../components/index-angular';
 
 angular
     .module('myApp', angularComponents)

@@ -1,20 +1,17 @@
 # vuejs-contour-module
 a contour drawing module written in vuejs
 
-# development
-run `yarn build -w` for packing files, dependencies and starting watching files
+# development for vuejs
+run `yarn dev:vue` for start watching files and serve on port 3000
 
-using browser to access index.html files in dist folder to view the result
-or serve dist folder by using a http server
-
-# production
-run `yarn prod` for packing files for production build
+# production for vuejs components
+run `yarn prod:vue` for packing files for production build
 
 this module can also build for angularjs (angular 1.x)
 
-# development
-run `yarn build-angular -w` for packing files, dependencies and starting watching files
+# development for angularjs
+run `yarn dev:angular` for start packing and watching files and serve on port 3000
 
-#production
-run `yarn prod-angular` for packing files for production build
+# production for angularjs components
+run `yarn prod:angular` for packing files for production build
 

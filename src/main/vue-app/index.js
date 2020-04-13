@@ -4,7 +4,7 @@ import _ from "lodash";
 import template from "./template.html";
 import "../../vendors/ctxtextpath";
 import * as d3 from "d3";
-import {vueComponents} from "../../components";
+import vueComponents from "../../components/index-vue";
 
 Vue.use(Plugin);
 

@@ -22,12 +22,12 @@
     "webpack-dev-server": "^3.10.3"
   },
   "scripts": {
-    "serve": "export BUILD_ENV=dev && webpack-dev-server --color --config webpack.conf.js",
-    "build": "export BUILD_ENV=dev && webpack --config webpack.conf.js",
-    "prod": "export BUILD_ENV=prod && webpack --config webpack.conf.js",
-    "serve-angular": "export BUILD_ENV=dev && export BUILD_TARGET=angular-app && webpack-dev-server --color --config webpack.conf.js",
-    "build-angular": "export BUILD_ENV=dev && export BUILD_TARGET=angular-app && webpack --config webpack.conf.js",
-    "prod-angular": "export BUILD_ENV=prod && export BUILD_TARGET=angular-app && webpack --config webpack.conf.js"
+    "dev:vue": "export BUILD_ENV=dev && webpack-dev-server --color --config webpack.conf.js",
+    "dev:vue:build": "export BUILD_ENV=dev && webpack --config webpack.conf.js",
+    "prod:vue": "export BUILD_ENV=prod && webpack --config webpack.conf.js",
+    "dev:angular": "export BUILD_ENV=dev && export BUILD_TARGET=angular && webpack-dev-server --color --config webpack.conf.js",
+    "dev:angular:build": "export BUILD_ENV=dev && export BUILD_TARGET=angular && webpack --config webpack.conf.js",
+    "prod:angular": "export BUILD_ENV=prod && export BUILD_TARGET=angular && webpack --config webpack.conf.js"
   },
   "author": "",
   "license": "ISC",

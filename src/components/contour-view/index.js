@@ -1,6 +1,7 @@
 import Vue from "vue/dist/vue.min.js";
 import "!style-loader!css-loader!./style.css";
 import * as d3 from "d3";
+import _ from "lodash";
 import template from "./template.html";
 import "../../vendors/ctxtextpath";
 const componentName = "contour-view";
@@ -20,7 +21,8 @@ const component = {
     mounted() {
         this.$nextTick(() => {
             this.__contour = initContour(this.$refs.drawContainer, this.dataFn);
-            this.onComponentMounted(this);
+            if (typeof(this.onComponentMounted) == 'function')
+                this.onComponentMounted(this);
         })
     },
     watch: {

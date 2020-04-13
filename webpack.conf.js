@@ -2,9 +2,15 @@ const HardSourceWebpackPlugin = require("hard-source-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 const isDev = process.env.BUILD_ENV === "dev" ? true:false;
-const target = process.env.BUILD_TARGET || "vue-app";
+const target = process.env.BUILD_TARGET || "vue";
 console.log(`building in dev mode: ${isDev}`);
-console.log(`building in target: ${target}`);
+console.log(`building with target: ${target}`);
+
+const plugins =  [
+    new HardSourceWebpackPlugin()
+];
+if (isDev)
+    plugins.push(new HtmlWebpackPlugin({ template: `./main/${target}-app/index.html` }));
 
 module.exports = {
     context: __dirname + '/src',
@@ -22,7 +28,7 @@ module.exports = {
         port: 3000
     },
     entry: {
-        main: `./main/${target}/index.js`
+        main: isDev ? `./main/${target}-app/index.js`:`./components/index-${target}.js`
     },
     output: {
         path: __dirname + "/dist",
@@ -35,16 +41,13 @@ module.exports = {
                 use: [ 'html-loader' ]
             }, {
                 test: /\.css$/,
-                use: ['style-loader', 'css-loader'],
+                use: [ 'style-loader', 'css-loader' ],
             },
             {
                 test: /\.less$/,
-                use: ['style-loader', 'css-loader', 'less-loader'],
+                use: [ 'style-loader', 'css-loader', 'less-loader' ],
             }
         ],
     },
-    plugins: [
-        new HardSourceWebpackPlugin(),
-        new HtmlWebpackPlugin({ template: `./main/${target}/index.html` }),
-    ]
+    plugins
 }
