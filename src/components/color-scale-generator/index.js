@@ -1,6 +1,7 @@
 import Vue from "vue/dist/vue.min.js";
 import "!style-loader!css-loader!./style.css";
 import * as d3 from "d3";
+import _ from "lodash";
 import template from "./template.html";
 const componentName = "color-scale-generator";
 
@@ -38,13 +39,7 @@ const component = {
             this.colorHandles = new ColorHandles(d3Svg, this.onColorStopsChanged);
             this.colorHandles.updateColorStops(this.domain, this.range);
 
-            window.addEventListener('resize', (e) => {
-                const containerWidth = d3Container.node().offsetWidth;
-                d3Svg.style('width', containerWidth || 100);
-                d3Canvas.attr('width', containerWidth || 100);
-                this.colorBar.redraw(this.domain, this.range);
-                this.colorHandles.updateColorStops(this.domain, this.range);
-            })
+            window.addEventListener('resize', _.debounce(() => this.redraw.call(this, true), 200))
 
             if (typeof(this.onComponentMounted) == 'function')
                 this.onComponentMounted(this);
@@ -58,13 +53,13 @@ const component = {
                 d3Container.select('canvas')
                     .attr('width', d3Container.node().offsetWidth || 100)
                     .attr('height', barHeight);
-                d3Container.select(svg)
+                d3Container.select('svg')
                     .style('width', d3Container.node().offsetWidth || 100)
                     .attr('height', barHeight);
             }
 
             this.colorBar.redraw(this.domain, this.range);
-            this.colorHandles.redraw(this.domain, this.range);
+            this.colorHandles.updateColorStops(this.domain, this.range);
         },
         onColorStopsChanged: function(domain, range) {
             this.domain = domain;

@@ -190,17 +190,18 @@ function initContour(container, dataFn) {
             .on("zoom", () => onCanvasZoom(d3Container, dataFn().onScaleChanged));
     d3Canvas.call(zoomBehavior);
 
-    window.addEventListener("resize", (e) => {
-        // update canvas size
-        const containerWidth = d3Container.node().offsetWidth;
-        const containerHeight = d3Container.node().offsetHeight;
-        d3Canvas
-            .attr("width", containerWidth || 500)
-            .attr("height", containerHeight || 500);
-
-        drawContour(d3Container);
-    });
+    window.addEventListener("resize", _.debounce(() => updateCanvasOnResize(d3Container, d3Canvas), 200));
     return { d3Canvas, zoomBehavior };
+}
+
+function updateCanvasOnResize(d3Container, d3Canvas) {
+    const containerWidth = d3Container.node().offsetWidth;
+    const containerHeight = d3Container.node().offsetHeight;
+    d3Canvas
+        .attr("width", containerWidth || 500)
+        .attr("height", containerHeight || 500);
+
+    drawContour(d3Container);
 }
 
 function onCanvasZoom(d3Container, onScaleChanged) {
