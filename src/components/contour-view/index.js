@@ -424,7 +424,7 @@ function getScalePosition(contourData, transform, d3Canvas) {
     const zoomedScale = transform ? transform.k : 1;
     const nodeCellToZoneCoordinate = contourData.grid.nodeToCoordinate;
 
-    const step = Math.pow(10, Math.floor(Math.log10(zoomedScale % 10)));
+    const step = Math.pow(10, Math.floor(Math.log10(zoomedScale % 10 || 0.01)));
 
     // get scale indicator for x dimension
     let cellUnit = step;
