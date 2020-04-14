@@ -107,7 +107,7 @@ const component = {
         trajectories: {
             handler: function(val) {
                 // console.log("vue - trajectories changed");
-                updateContourDataDebounced(this.$refs.drawContainer, this.dataFn, 'trajectory');
+                updateContourDataDebounced(this.$refs.drawContainer, this.dataFn, 'well');
             },
             deep: true
         },
@@ -558,7 +558,7 @@ function drawContour(d3Container, contourData, transform, force=null) {
         ? getWellsPosition(cachedContourData, cachedTransform)
         : cachedWellsPosition;
 
-    cachedTrajectoriesPosition = (scaleChanged || force=="all" || force=="trajectory")
+    cachedTrajectoriesPosition = (scaleChanged || force=="all" || force=="well")
         ? getTrajectoriesPosition(cachedContourData, cachedTransform)
         : cachedTrajectoriesPosition;
 
