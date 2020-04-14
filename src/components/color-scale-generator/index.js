@@ -37,7 +37,7 @@ const component = {
             this.colorBar.redraw(this.domain, this.range);
 
             this.colorHandles = new ColorHandles(d3Svg, this.onColorStopsChanged);
-            this.colorHandles.updateColorStops(this.domain, this.range);
+            this.colorHandles.updateColorStops(this.domain, this.range, barHeight);
 
             window.addEventListener('resize', _.debounce(() => this.redraw.call(this, true), 200))
 
@@ -110,8 +110,10 @@ function ColorHandles(d3Svg, onColorStopChanges) {
     this.d3Svg = d3Svg;
     this.colorStops = [];
     this.transformX = d3.scaleLinear().range([0, d3Svg.node().clientWidth]);
+    let cachedBarHeight = 50;
 
-    this.updateColorStops = function(domain, range) {
+    this.updateColorStops = function(domain, range, barHeight) {
+        cachedBarHeight = barHeight || cachedBarHeight;
         removeAllColorStops();
         this.transformX
             .domain(d3.extent(domain))
@@ -165,7 +167,7 @@ function ColorHandles(d3Svg, onColorStopChanges) {
             .attr('y', 0);
         const rect = colorStopGroup.append('rect')
             .attr('width', HANDLE_WIDTH)
-            .attr('height', 50)
+            .attr('height', cachedBarHeight)
             .attr('x', - HANDLE_WIDTH/2)
             .attr('y', 0)
             .style('cursor', disableDrag ? 'auto':'col-resize')
@@ -187,13 +189,13 @@ function ColorHandles(d3Svg, onColorStopChanges) {
             .attr('width', 10)
             .attr('height', 10)
             .attr('x', -5)
-            .attr('y', 55)
+            .attr('y', cachedBarHeight + 5)
             .style('cursor', 'pointer')
             .style('fill', color);
 
         const textIndicator = colorStopGroup.append('text')
             .attr('x', 0)
-            .attr('y', 80)
+            .attr('y', cachedBarHeight + 30)
             .attr('text-anchor', disableDrag ? (pIdx == 0 ? 'start':'end'):'middle')
             .style('font-size', 12)
             .text(value.toFixed(3));

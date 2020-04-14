@@ -39,7 +39,7 @@ const component = {
         },
         step: function(val) {
             // console.log("vue - onStep changed");
-            updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
+            updateContourDataDebounced(this.$refs.drawContainer, this.dataFn, 'path');
         },
         majorEvery: function(val) {
             // console.log("vue - majorEvery changed");

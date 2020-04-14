@@ -25,6 +25,7 @@ angular
         this.yDirection = 'up';
         this.showWell = true;
         this.showTrajectory = true;
+        this.colorBarHeight= 20;
         this.trajectories = [
             {
                 points: [

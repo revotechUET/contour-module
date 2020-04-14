@@ -39,6 +39,7 @@
                 on-data-changed-get="rootCtrl.getter('onDataChanged')">
             </contour-file-import>
             <color-scale-generator
+                bar-height-get="rootCtrl.getter('colorBarHeight')"
                 on-scale-changed-get="rootCtrl.getter('onColorScaleChanged')"
                 min-val-get="rootCtrl.getter('minValue')"
                 max-val-get="rootCtrl.getter('maxValue')">
