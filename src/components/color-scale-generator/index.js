@@ -138,7 +138,8 @@ function ColorHandles(d3Svg, onColorStopChanges) {
 
     this.d3Svg.on('click', function() {
         if (!d3.event.ctrlKey) return;
-        const newValue = handler.transformX.invert(d3.event.x);
+        // console.log("on bar click", d3.event, d3.mouse(handler.d3Svg.node()));
+        const newValue = handler.transformX.invert(d3.event.offsetX);
         const newColor = 'red';
         const domain = handler.colorStops.map(colorStop => colorStop.__value);
         const range = handler.colorStops.map(colorStop => colorStop.__color);
