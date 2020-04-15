@@ -201,7 +201,7 @@ function initContour(container, dataFn) {
     const containerWidth = d3Container.node().offsetWidth;
     const containerHeight = d3Container.node().offsetHeight;
     const d3Canvas = d3Container.append("canvas")
-        .style('background-color', 'black')
+        // .style('background-color', 'black')
         .attr("width", containerWidth || 500)
         .attr("height", containerHeight || 500);
 
@@ -614,6 +614,7 @@ let cachedWellsPosition = [];
 let cachedTrajectoriesPosition = [];
 let cachedTransform = null;
 let cachedGrid = null;
+let cachedAxes = null;
 let cachedScalePosition = null;
 let cachedColorLegendData = null;
 function drawContour(d3Container, contourData, transform, force=null) {
@@ -685,33 +686,26 @@ function drawContour(d3Container, contourData, transform, force=null) {
             context.beginPath();
             // draw minor ticks
             cachedGrid.rows.filter(row => !row.isMajor).forEach(row => {
-                context.moveTo(row.lo.x, row.lo.y);
-                context.lineTo(row.hi.x, row.hi.y);
+                context.moveTo(row.lo.x - 5, row.lo.y);
+                context.lineTo(row.hi.x + 5, row.hi.y);
             })
             cachedGrid.cols.filter(col => !col.isMajor).forEach(col => {
-                context.moveTo(col.lo.x, col.lo.y);
-                context.lineTo(col.hi.x, col.hi.y);
+                context.moveTo(col.lo.x, col.lo.y - 5);
+                context.lineTo(col.hi.x, col.hi.y + 5);
             })
             context.closePath();
             context.stroke();
             // draw major ticks
             context.lineWidth = 2;
-            context.strokeStyle = 'white';
-            context.fillStyle = 'white';
-            context.font = `12px SansSerif`;
+            context.strokeStyle = 'black';
             context.beginPath();
-            context.textAlign = 'end';
-            const TEXT_PADDING = 10;
             cachedGrid.rows.filter(row => row.isMajor).forEach(row => {
-                context.moveTo(row.lo.x, row.lo.y);
-                context.lineTo(row.hi.x, row.hi.y);
-                context.fillText(row.value, row.lo.x - TEXT_PADDING, row.lo.y);
+                context.moveTo(row.lo.x - 10, row.lo.y);
+                context.lineTo(row.hi.x + 10, row.hi.y);
             })
-            context.textAlign = 'center';
             cachedGrid.cols.filter(col => col.isMajor).forEach(col => {
-                context.moveTo(col.lo.x, col.lo.y);
-                context.lineTo(col.hi.x, col.hi.y);
-                context.fillText(col.value, col.lo.x, col.lo.y - TEXT_PADDING);
+                context.moveTo(col.lo.x, col.lo.y - 10);
+                context.lineTo(col.hi.x, col.hi.y + 10);
             })
             context.closePath();
             context.stroke();
@@ -744,16 +738,73 @@ function drawContour(d3Container, contourData, transform, force=null) {
         context.restore();
     })
 
+    // draw grid text
+    if (cachedContourData.grid.show && cachedGrid) {
+        requestAnimationFrame(() => {
+            context.save();
+            if (cachedTransform) {
+                context.translate(cachedTransform.x, cachedTransform.y);
+            }
+            const translateY = cachedTransform ? cachedTransform.y : 0;
+            const translateX = cachedTransform ? cachedTransform.x : 0;
+            const TEXT_PADDING = 10;
+            context.strokeStyle = 'black';
+            context.fillStyle = 'black';
+            context.font = `12px SansSerif`;
+            context.textBaseline = 'middle';
+            context.beginPath();
+            cachedGrid.rows.filter(row => row.isMajor).forEach(row => {
+                const textX = row.lo.x - 10 - TEXT_PADDING;
+                const _textX = row.lo.x - translateX + TEXT_PADDING;
+                if (_textX > textX) {
+                    // background rect
+                    context.fillStyle = 'white';
+                    context.fillRect(_textX - 5, row.lo.y - 10, context.measureText(row.value).width + 10, 20);
+                    context.strokeRect(_textX - 5, row.lo.y - 10, context.measureText(row.value).width + 10, 20);
+                    context.fillStyle = 'black';
+
+                    context.textAlign = 'start';
+                    context.fillText(row.value, _textX, row.lo.y);
+                } else {
+                    context.textAlign = 'end';
+                    context.fillText(row.value, textX, row.lo.y);
+                }
+            })
+            context.textAlign = 'center';
+            cachedGrid.cols.filter(cols => cols.isMajor).forEach(col => {
+                const textY = col.lo.y - 10 - TEXT_PADDING;
+                const _textY = col.lo.y - translateY + TEXT_PADDING;
+
+                if (_textY > textY) {
+                    // background rect
+                    context.fillStyle = 'white';
+                    const measuredWidth = context.measureText(col.value).width;
+                    context.fillRect(col.lo.x - measuredWidth / 2 - 5, _textY - 10, measuredWidth + 10, 20);
+                    context.strokeRect(col.lo.x - measuredWidth / 2 - 5, _textY - 10, measuredWidth + 10, 20);
+                    context.fillStyle = 'black';
+
+                    context.textBaseline = "Top";
+                    context.fillText(col.value, col.lo.x, _textY);
+                } else {
+                    context.textBaseline = "Bottom";
+                    context.fillText(col.value, col.lo.x, textY);
+                }
+            })
+            context.restore();
+        })
+    }
+
+
     if (cachedPath2Ds.showLabel) {
         requestAnimationFrame(() => {
             context.save();
             if (cachedTransform) {
                 context.translate(cachedTransform.x, cachedTransform.y);
             }
-            context.strokeStyle = "black";
+            context.strokeStyle = "transparent";
             context.textAlign = "center";
-            context.textBaseline = "middle";
-            context.fillStyle =  "white";
+            context.textBaseline = "Bottom";
+            context.fillStyle =  "black";
             context.font = `${cachedPath2Ds.labelFontSize}px Sans-Serif`;
             context.lineWidth = 1;
             const LABEL_STEP = 30;
@@ -784,8 +835,8 @@ function drawContour(d3Container, contourData, transform, force=null) {
             //     context.translate(cachedTransform.x, cachedTransform.y);
             // }
             context.lineWidth = 2;
-            context.strokeStyle = 'white';
-            context.fillStyle = 'white';
+            context.strokeStyle = 'black';
+            context.fillStyle = 'black';
             context.font = `12px Sans-Serif`;
             context.textAlign = 'end';
 
@@ -875,8 +926,8 @@ function drawContour(d3Container, contourData, transform, force=null) {
             if (cachedColorLegendData.drawVertically) {
                 // vertically draw
                 context.translate(10, 20);
-                context.strokeStyle = 'white';
-                context.fillStyle = 'white';
+                context.strokeStyle = 'black';
+                context.fillStyle = 'black';
                 context.font = `${cachedColorLegendData.fontSize}px Sans-Serif`;
                 context.textAlign = 'start';
                 context.fillText(cachedColorLegendData.title, 0, 0);
@@ -903,7 +954,7 @@ function drawContour(d3Container, contourData, transform, force=null) {
                     .range([length, 0]);
                 context.lineWidth = 1;
                 context.textBaseline = 'middle';
-                context.fillStyle = 'white';
+                context.fillStyle = 'black';
                 context.beginPath();
                 cachedColorLegendData.majorTicks.forEach(tick => {
                     const tickY = scaleY(tick);

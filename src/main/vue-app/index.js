@@ -22,7 +22,7 @@ new Vue({
         step: 100,
         majorEvery: 5,
         fontSize: 2,
-        showLabel: true,
+        showLabel: false,
         showGrid: true,
         gridMajor: 5,
         gridMinor: 4,
