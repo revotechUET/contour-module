@@ -7,12 +7,25 @@
         :color-scale="colorScale" :step="step" :major-every="majorEvery"
         :show-grid="showGrid" :grid-major="gridMajor" :grid-minor="gridMinor" :grid-nice="gridNice"
         :y-direction="yDirection" :show-scale="showScale"
+        :show-color-scale-legend="showColorScaleLegend" :color-legend-ticks="colorLegendTicks"
+        :negative-data="negativeData"
         :show-label="showLabel" :label-font-size="fontSize" :on-scale-changed="(_scl) => scale = _scl">
     </contour-view>
     </div>
-    <contour-file-import :on-data-changed="onDataChanged"></contour-file-import>
-    <color-scale-generator :on-scale-changed="onColorScaleChanged" :min-val="minValue" :max-val="maxValue"></color-scale-generator>
+    <contour-file-import
+        :negative-data="negativeData"
+        :on-data-changed="onDataChanged"></contour-file-import>
+    <color-scale-generator
+        :on-scale-changed="onColorScaleChanged"
+        :min-val="minValue" :max-val="maxValue"></color-scale-generator>
     <div>
+        <label>Negative Import</label>
+        <input type="checkbox" v-model="negativeData"/>
+        <label>color legend histogram bins</label>
+        <input type="number" v-model="colorLegendTicks"/>
+        <label>show Color Scale Legend</label>
+        <input type="checkbox" v-model="showColorScaleLegend"/>
+        <br/>
         <label>Scale</label>
         <span>{{scale}}</span>
         <label>show Scale</label>

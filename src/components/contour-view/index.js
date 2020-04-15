@@ -15,6 +15,8 @@ const component = {
         'onScaleChanged', 'yDirection', "showScale",
         'wells', "showWell",
         'trajectories', 'showTrajectory',
+        "showColorScaleLegend", 'colorLegendTicks',
+        "negativeData",
         'onComponentMounted'
     ],
     template,
@@ -35,7 +37,7 @@ const component = {
         },
         colorScale: function() {
             // console.log("vue - colorScale changed")
-            updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
+            updateContourDataDebounced(this.$refs.drawContainer, this.dataFn, 'color');
         },
         step: function(val) {
             // console.log("vue - onStep changed");
@@ -114,7 +116,21 @@ const component = {
         showTrajectory: function(val) {
             // console.log("vue - showTrajectory changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
+        },
+        showColorScaleLegend: function(val) {
+            console.log("vue - showColorScaleLegend changed");
+            updateContourDataDebounced(this.$refs.drawContainer, this.dataFn, 'color');
+        },
+        colorLegendTicks: function(val) {
+            console.log("vue - colorLegendTicks changed");
+            updateContourDataDebounced(this.$refs.drawContainer, this.dataFn, 'color');
+        },
+        /*
+        negativeData: function(val) {
+            console.log("vue - negativeData changed");
+            updateContourDataDebounced(this.$refs.drawContainer, this.dataFn, 'all');
         }
+        */
     },
     methods: {
         setCenter: function(xCoord, yCoord) {
@@ -145,6 +161,7 @@ const component = {
         dataFn: function() {
             return {
                 values: this.values,
+                negativeData: this.negativeData,
                 wells: this.wells,
                 trajectories: this.trajectories,
                 width: this.nRows,
@@ -153,6 +170,8 @@ const component = {
                 majorEvery: this.majorEvery,
                 showLabel: this.showLabel,
                 showGrid: this.showGrid,
+                showColorScaleLegend: this.showColorScaleLegend,
+                colorLegendTicks: this.colorLegendTicks,
                 gridMajor: this.gridMajor,
                 gridMinor: this.gridMinor,
                 gridNice: this.gridNice,
@@ -224,16 +243,21 @@ function updateContourData(container, dataFn, forceDrawTarget=null) {
     const context = d3Canvas.node().getContext("2d");
     const data = dataFn();
 
-    // scale to pixel
-    const gridToScreenX = d3.scaleLinear()
-        // .domain([0, data.width])
-        // .range([0, d3Canvas.node().width]);
-    const gridToScreenY = d3.scaleLinear()
-        // .domain([0, data.height])
-        // .range([0, d3Canvas.node().height]);
+    // scale to pixel: 1 grid node ~ 1 pixel
+    const gridToScreenX = d3.scaleLinear();
+    const gridToScreenY = d3.scaleLinear();
 
-    // projection scale
+    // projection scale: 1 grid cell ~ xy coordinate
     const gridToCoordinate = function(gridWidth, gridHeight, minX, maxX, minY, maxY, yDirection) {
+        const scaleX = d3.scaleLinear()
+            .domain([0, 1])
+            .range([minX, minX + 50]);
+        const _yIsUp = yDirection == 'up';
+        const _rangeScaleY = _yIsUp ? [maxY, maxY - 50]:[minY, minY + 50];
+        const scaleY = d3.scaleLinear()
+            .domain([0, 1])
+            .range(_rangeScaleY);
+        /*
         const scaleX = d3.scaleLinear()
             .domain([0, gridWidth])
             .range([minX, maxX]);
@@ -243,6 +267,7 @@ function updateContourData(container, dataFn, forceDrawTarget=null) {
         const scaleY = d3.scaleLinear()
             .domain([0, gridHeight])
             .range(_rangeScaleY);
+        */
         const invert = function(coordinate) {
             return {
                 x: scaleX.invert(coordinate.x),
@@ -262,14 +287,16 @@ function updateContourData(container, dataFn, forceDrawTarget=null) {
 
     if (!data.width || !data.height) return;
 
-    const extent = d3.extent(data.values);
-    const threshold = d3.range(extent[0], extent[1], data.step);
-
     // prepare data for contour;
+    const negativeData = data.negativeData;
+    const contourValues = negativeData ? data.values.map(v => _.isFinite(v) ? Math.abs(v):null):data.values;
+    const extent = d3.extent(contourValues);
+    const step = data.step || (extent[1] - extent[0]) / 10; // default 10 contour;
+    const threshold = d3.range(extent[0], extent[1], step);
     const contourData = d3.contours()
         .size([data.width, data.height])
         .thresholds(threshold)
-        (data.values);
+        (contourValues);
     const gridToCoordinateTransform = gridToCoordinate(data.width, data.height, data.minX, data.maxX, data.minY, data.maxY, data.yDirection);
     Object.assign(contourData, {
         majorEvery: data.majorEvery,
@@ -279,8 +306,11 @@ function updateContourData(container, dataFn, forceDrawTarget=null) {
         showWell: data.showWell,
         labelFontSize: data.labelFontSize,
         colorScale: data.colorScale,
+        showColorScaleLegend: data.showColorScaleLegend,
+        colorLegendTicks: data.colorLegendTicks,
         wells: data.wells,
         trajectories: data.trajectories,
+        negativeData: data.negativeData,
         grid: {
             show: data.showGrid,
             nice: data.gridNice,
@@ -294,7 +324,8 @@ function updateContourData(container, dataFn, forceDrawTarget=null) {
             minX: data.minX, maxX: data.maxX,
             minY: data.minY, maxY: data.maxY,
             yDirection: data.yDirection
-        }
+        },
+        values: data.values // for draw color legend
     })
 
     // temporary save transform
@@ -448,6 +479,7 @@ function getScalePosition(contourData, transform, d3Canvas) {
     }
 
     // get scale indicator for y dimension
+    /*
     cellUnit = step;
     while(nodeYToPixel(cellUnit) * zoomedScale < SCALE_INDICATOR_MAX_WIDTH)
         cellUnit += step;
@@ -467,11 +499,14 @@ function getScalePosition(contourData, transform, d3Canvas) {
         value: _valueY
         // value: _.round(cellUnit, 2)
     }
+    */
 
     return {
         startX, endX,
+        /*
         loY: _yIsUp ? startY:endY,
         hiY: _yIsUp ? endY:startY
+        */
     };
 }
 
@@ -522,6 +557,57 @@ function getTrajectoriesPosition(contourData, transform) {
     return tPos;
 }
 
+const DEFAULT_NUMBER_OF_TICKS = 50;
+const DEFAULT_SCALE_BAR_LENGTH = 150;
+const DEFAULT_LEGEND_DIRECTION = 'vertical';
+const DEFAULT_LEGEND_FONT_SIZE = 12;
+function getColorLegendData (contourData, transform) {
+    const legend = {};
+
+    const legendDirection = DEFAULT_LEGEND_DIRECTION;
+    const legendLength = DEFAULT_SCALE_BAR_LENGTH;
+    const fontSize = DEFAULT_LEGEND_FONT_SIZE;
+    // const negativeData = contourData.negativeData || false;
+    const numberOfTicks = contourData.colorLegendTicks || DEFAULT_NUMBER_OF_TICKS;
+    const colorScale = contourData.colorScale;
+    const extent = d3.extent(colorScale.domain());
+    const ticks = colorScale.ticks(numberOfTicks);
+    const histogramGenerator = d3.histogram()
+        .domain(extent)
+        .thresholds(ticks);
+    const bins = histogramGenerator(contourData.values);
+
+    const numberOfMajorTicks = Math.ceil((legendLength + fontSize) / (fontSize + 5));
+    const majorStepIdx = Math.ceil(ticks.length / numberOfMajorTicks);
+    const majorTicks = [];
+    let lastMajorTickIdx = null;
+    for(const tIdx in ticks) {
+        if(!lastMajorTickIdx) {
+            lastMajorTickIdx = tIdx;
+            majorTicks.push(ticks[tIdx]);
+        } else if ((tIdx - lastMajorTickIdx) >= majorStepIdx) {
+            lastMajorTickIdx = tIdx;
+            majorTicks.push(ticks[tIdx]);
+        }
+    }
+
+    legend.title = "Depth";
+    legend.ticks = ticks;
+    legend.maxTick = d3.max(ticks);
+    legend.minTick = d3.min(ticks);
+    legend.majorTicks = majorTicks;
+    legend.numberOfMajorTicks = numberOfMajorTicks;
+    legend.histogramBins = bins.map(b => b.length);
+    legend.histogramHeight = 100;
+    legend.extent = extent;
+    legend.colorScale = colorScale;
+    legend.drawVertically = legendDirection == "vertical";
+    legend.legendLength = legendLength;
+    legend.fontSize = fontSize;
+
+    return legend;
+}
+
 let cachedPath2Ds = [];
 let cachedContourData = [];
 let cachedWellsPosition = [];
@@ -529,6 +615,7 @@ let cachedTrajectoriesPosition = [];
 let cachedTransform = null;
 let cachedGrid = null;
 let cachedScalePosition = null;
+let cachedColorLegendData = null;
 function drawContour(d3Container, contourData, transform, force=null) {
     const d3Canvas = d3Container.select('canvas');
     const context = d3Canvas.node().getContext("2d");
@@ -562,12 +649,18 @@ function drawContour(d3Container, contourData, transform, force=null) {
         ? getTrajectoriesPosition(cachedContourData, cachedTransform)
         : cachedTrajectoriesPosition;
 
+    cachedColorLegendData = (force=="all" || force=="color")
+        ? getColorLegendData(cachedContourData, cachedTransform)
+        : cachedColorLegendData;
+
     // editing props
     cachedPath2Ds.showLabel = cachedContourData.showLabel;
     cachedPath2Ds.labelFontSize = cachedContourData.labelFontSize;
     cachedPath2Ds.forEach((path, i) => {
         Object.assign(path, {
-            fillColor: cachedContourData.colorScale(cachedContourData[i].value),
+            fillColor: cachedContourData.negativeData
+                ? cachedContourData.colorScale(-cachedContourData[i].value)
+                : cachedContourData.colorScale(cachedContourData[i].value),
             isMajor: i % cachedContourData.majorEvery == 0,
             value: cachedContourData[i].value.toFixed(0),
         });
@@ -704,7 +797,10 @@ function drawContour(d3Container, contourData, transform, force=null) {
             context.lineTo(startX.x, startX.y + 10);
             context.lineTo(endX.x, endX.y + 10);
             context.lineTo(endX.x, endX.y);
+            context.stroke();
+            context.fillText(endX.value, endX.x - 5, endX.y);
 
+            /*
             const startY = cachedScalePosition.loY;
             const endY = cachedScalePosition.hiY;
             context.moveTo(startY.x, startY.y);
@@ -712,14 +808,10 @@ function drawContour(d3Container, contourData, transform, force=null) {
             context.lineTo(endY.x + 10, endY.y);
             context.lineTo(endY.x, endY.y);
             // context.closePath();
-            context.stroke();
-            // context.fillText(start.value, start.x, start.y - 10);
-            context.fillText(endX.value, endX.x - 5, endX.y);
-
             context.translate(endY.x, endY.y)
             context.rotate(-90 * Math.PI / 180);
             context.fillText(endY.value, -5, 0);
-
+            */
             context.closePath();
             context.restore();
         })
@@ -771,6 +863,74 @@ function drawContour(d3Container, contourData, transform, force=null) {
                 })
                 context.stroke();
             })
+
+            context.restore();
+        })
+    }
+
+    if (cachedContourData.showColorScaleLegend && cachedColorLegendData) {
+        requestAnimationFrame(() => {
+            context.save();
+
+            if (cachedColorLegendData.drawVertically) {
+                // vertically draw
+                context.translate(10, 20);
+                context.strokeStyle = 'white';
+                context.fillStyle = 'white';
+                context.font = `${cachedColorLegendData.fontSize}px Sans-Serif`;
+                context.textAlign = 'start';
+                context.fillText(cachedColorLegendData.title, 0, 0);
+                context.translate(0, 10);
+                const length = cachedColorLegendData.legendLength;
+
+                // draw color scale bar
+                const colorScale = cachedColorLegendData.colorScale;
+                const colorBarWidth = 20;
+                // draw from bottom -> top
+                const grad = context.createLinearGradient(0, length, 0, 0);
+                const normalizeDomain = d3.scaleLinear()
+                        .domain(cachedColorLegendData.extent)
+                        .range([0, 1]);
+                colorScale.domain().forEach(p => {
+                    grad.addColorStop(normalizeDomain(p), colorScale(p));
+                });
+                context.fillStyle = grad;
+                context.fillRect(0, 0, colorBarWidth, length);
+                // draw ticks
+                context.translate(colorBarWidth, 0);
+                const scaleY = d3.scaleLinear()
+                    .domain(cachedColorLegendData.extent)
+                    .range([length, 0]);
+                context.lineWidth = 1;
+                context.textBaseline = 'middle';
+                context.fillStyle = 'white';
+                context.beginPath();
+                cachedColorLegendData.majorTicks.forEach(tick => {
+                    const tickY = scaleY(tick);
+                    context.moveTo(0, tickY);
+                    context.lineTo(10, tickY);
+                    context.fillText(tick, 12, tickY);
+                })
+                context.stroke();
+
+                // draw histogram
+                const ticks = cachedColorLegendData.ticks;
+                const maxTickWidth = context.measureText(cachedColorLegendData.maxTick).width;
+                const minTickWidth = context.measureText(cachedColorLegendData.minTick).width;
+                const startHisPoint = Math.max(maxTickWidth, minTickWidth) + 20;
+                context.translate(startHisPoint, 0);
+                const bins = cachedColorLegendData.histogramBins;
+                const binWidth = length / bins.length;
+                const binHeightScale = d3.scaleLinear()
+                    .domain(d3.extent(bins))
+                    .range([0, cachedColorLegendData.histogramHeight]);
+                context.fillStyle = grad;
+                for(const tIdx in ticks) {
+                    context.fillRect(0, scaleY(ticks[tIdx]), binHeightScale(bins[tIdx]), binWidth);
+                }
+            } else {
+                // LATER: horizontally draw
+            }
 
             context.restore();
         })

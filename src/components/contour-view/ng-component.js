@@ -19,6 +19,8 @@ const template = `
         :show-scale='showScale' :wells='wells' :show-well='showWell'
         :show-trajectory='showTrajectory' :trajectories='trajectories'
         :show-label="showLabel" :label-font-size="labelFontSize"
+        :show-color-scale-legend="showColorScaleLegend" :color-legend-ticks="colorLegendTicks"
+        :negative-data="negativeData"
         :on-component-mounted="onComponentMounted"
         :on-scale-changed="onScaleChanged">
     </contour-view>

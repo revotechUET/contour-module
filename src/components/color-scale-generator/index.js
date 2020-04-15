@@ -6,7 +6,10 @@ import template from "./template.html";
 const componentName = "color-scale-generator";
 
 const component = {
-    props: ['onScaleChanged', 'minVal', 'maxVal', 'barHeight', 'onComponentMounted'],
+    props: [
+        'onScaleChanged', 'minVal', 'maxVal',
+        'barHeight' , 'onComponentMounted'
+    ],
     data: function() {
         return {
             domain: [],

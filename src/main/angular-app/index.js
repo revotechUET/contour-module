@@ -26,6 +26,8 @@ angular
         this.showWell = true;
         this.showTrajectory = true;
         this.colorBarHeight= 20;
+        this.negativeData = false;
+        this.showColorScaleLegend = true;
         this.trajectories = [
             {
                 points: [

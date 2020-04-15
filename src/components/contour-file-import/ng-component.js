@@ -10,6 +10,7 @@ const propList = Array.isArray(vueComponent.props) ? vueComponent.props : Object
 const template = `
     <contour-file-import
         ng-non-bindable
+        :negative-data="negativeData"
         :on-data-changed="onDataChanged">
     </contour-file-import>
 `;

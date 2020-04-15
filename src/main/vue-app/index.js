@@ -13,6 +13,7 @@ new Vue({
     template,
     components: vueComponents,
     data: {
+        negativeData: false,
         headers: {},
         values: [],
         minValue: 0,
@@ -28,7 +29,9 @@ new Vue({
         gridNice: true,
         scale: 1,
         showScale: true,
-        yDirection: 'up'
+        yDirection: 'up',
+        colorLegendTicks: 50,
+        showColorScaleLegend: true,
     },
     methods: {
         onDataChanged: function(changedData) {

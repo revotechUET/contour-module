@@ -15,6 +15,7 @@
                 max-x-get="rootCtrl.getter('headers.maxX')"
                 min-y-get="rootCtrl.getter('headers.minY')"
                 max-y-get="rootCtrl.getter('headers.maxY')"
+                negative-data-get="rootCtrl.getter('negativeData')"
                 color-scale-get="rootCtrl.getter('colorScale')"
                 step-get="rootCtrl.getter('step')"
                 major-every-get="rootCtrl.getter('majorEvery')"
@@ -22,6 +23,8 @@
                 grid-major-get="rootCtrl.getter('gridMajor')"
                 grid-minor-get="rootCtrl.getter('gridMinor')"
                 grid-nice-get="rootCtrl.getter('gridNice')"
+                show-color-scale-legend-get="rootCtrl.getter('showColorScaleLegend')"
+                color-legend-ticks-get="rootCtrl.getter('colorScaleLegendTicks')"
                 show-label-get="rootCtrl.getter('showLabel')"
                 show-scale-get="rootCtrl.getter('showScale')"
                 label-font-size-get="rootCtrl.getter('fontSize')"
@@ -36,6 +39,7 @@
             </div>
             <button ng-click="rootCtrl.makeCenter()">Center map</button>
             <contour-file-import
+                negative-data-get="rootCtrl.getter('negativeData')"
                 on-data-changed-get="rootCtrl.getter('onDataChanged')">
             </contour-file-import>
             <color-scale-generator
@@ -45,6 +49,14 @@
                 max-val-get="rootCtrl.getter('maxValue')">
             </color-scale-generator>
             <div>
+                <label>Negative import</label>
+                <input type="checkbox" ng-model="rootCtrl.negativeData"/>
+                <br/>
+                <label>Show color scale legend</label>
+                <input type="checkbox" ng-model="rootCtrl.showColorScaleLegend"/>
+                <label>Color scale legend ticks</label>
+                <input type="number" ng-model="rootCtrl.colorScaleLegendTicks"/>
+                <br/>
                 <label>Show Trajectory</label>
                 <input type="checkbox" ng-model="rootCtrl.showTrajectory"/>
                 <br/>
