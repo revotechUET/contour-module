@@ -8,8 +8,9 @@ const componentName = "contour-view";
 
 const component = {
     props: [
-        'values', "nRows", "nCols", "colorScale", "step", "majorEvery",
-        "labelFontSize", "showLabel",
+        'values', "contourUnit",
+        "nRows", "nCols", "colorScale", "step", "majorEvery",
+        "labelFontSize", "showLabel", "xInc", "yInc",
         "showGrid", "gridMajor", "gridMinor", "gridNice",
         "minX", "maxX", "minY", "maxY",
         'onScaleChanged', 'yDirection', "showScale",
@@ -79,6 +80,16 @@ const component = {
             // console.log("vue - showScale changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
+        /*
+        xInc: function(val) {
+            // console.log("vue - xInc changed");
+            updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
+        },
+        yInc: function(val) {
+            // console.log("vue - yInc changed");
+            updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
+        },
+        */
         minX: function(val) {
             // console.log("vue - minX changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
@@ -118,11 +129,15 @@ const component = {
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
         showColorScaleLegend: function(val) {
-            console.log("vue - showColorScaleLegend changed");
+            // console.log("vue - showColorScaleLegend changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn, 'color');
         },
         colorLegendTicks: function(val) {
-            console.log("vue - colorLegendTicks changed");
+            // console.log("vue - colorLegendTicks changed");
+            updateContourDataDebounced(this.$refs.drawContainer, this.dataFn, 'color');
+        },
+        contourUnit: function(val) {
+            console.log("vue - contourUnit changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn, 'color');
         },
         /*
@@ -178,6 +193,8 @@ const component = {
                 labelFontSize: this.labelFontSize,
                 colorScale: this.colorScale,
                 onScaleChanged: this.onScaleChanged,
+                xInc: this.xInc,
+                yInc: this.yInc,
                 minX: this.minX,
                 maxX: this.maxX,
                 minY: this.minY,
@@ -188,6 +205,7 @@ const component = {
                 showTrajectory: this.showTrajectory,
                 centerCoordinate: this.centerCoordinate,
                 scale: this.scale,
+                contourUnit: this.contourUnit,
             }
         }
     }
@@ -248,26 +266,15 @@ function updateContourData(container, dataFn, forceDrawTarget=null) {
     const gridToScreenY = d3.scaleLinear();
 
     // projection scale: 1 grid cell ~ xy coordinate
-    const gridToCoordinate = function(gridWidth, gridHeight, minX, maxX, minY, maxY, yDirection) {
+    const gridToCoordinate = function(gridWidth, gridHeight, minX, maxX, minY, maxY, xInc = 50, yInc = 50, yDirection) {
         const scaleX = d3.scaleLinear()
             .domain([0, 1])
-            .range([minX, minX + 50]);
+            .range([minX, minX + xInc]);
         const _yIsUp = yDirection == 'up';
-        const _rangeScaleY = _yIsUp ? [maxY, maxY - 50]:[minY, minY + 50];
+        const _rangeScaleY = _yIsUp ? [maxY, maxY - yInc]:[minY, minY + yInc];
         const scaleY = d3.scaleLinear()
             .domain([0, 1])
             .range(_rangeScaleY);
-        /*
-        const scaleX = d3.scaleLinear()
-            .domain([0, gridWidth])
-            .range([minX, maxX]);
-
-        const _yIsUp = yDirection == 'up';
-        const _rangeScaleY = _yIsUp ? [maxY, minY]:[minY, maxY];
-        const scaleY = d3.scaleLinear()
-            .domain([0, gridHeight])
-            .range(_rangeScaleY);
-        */
         const invert = function(coordinate) {
             return {
                 x: scaleX.invert(coordinate.x),
@@ -297,7 +304,7 @@ function updateContourData(container, dataFn, forceDrawTarget=null) {
         .size([data.width, data.height])
         .thresholds(threshold)
         (contourValues);
-    const gridToCoordinateTransform = gridToCoordinate(data.width, data.height, data.minX, data.maxX, data.minY, data.maxY, data.yDirection);
+    const gridToCoordinateTransform = gridToCoordinate(data.width, data.height, data.minX, data.maxX, data.minY, data.maxY, data.xInc, data.yInc, data.yDirection);
     Object.assign(contourData, {
         majorEvery: data.majorEvery,
         showLabel: data.showLabel,
@@ -325,7 +332,8 @@ function updateContourData(container, dataFn, forceDrawTarget=null) {
             minY: data.minY, maxY: data.maxY,
             yDirection: data.yDirection
         },
-        values: data.values // for draw color legend
+        values: data.values, // for draw color legend
+        contourUnit: data.contourUnit,
     })
 
     // temporary save transform
@@ -455,59 +463,50 @@ function getScalePosition(contourData, transform, d3Canvas) {
     const zoomedScale = transform ? transform.k : 1;
     const nodeCellToZoneCoordinate = contourData.grid.nodeToCoordinate;
 
-    const step = Math.pow(10, Math.floor(Math.log10(zoomedScale % 10 || 0.01)));
+    let step = Math.pow(10, Math.floor(Math.log10(zoomedScale % 10 || 0.01)));
 
     // get scale indicator for x dimension
     let cellUnit = step;
     while(nodeXToPixel(cellUnit) * zoomedScale < SCALE_INDICATOR_MAX_WIDTH)
         cellUnit += step;
 
+    // 1m scale
+    if (cellUnit == step && (nodeXToPixel(cellUnit) * zoomedScale > SCALE_INDICATOR_MAX_WIDTH)) {
+        step = 0.01;
+        cellUnit = step;
+        while(nodeXToPixel(cellUnit) * zoomedScale < SCALE_INDICATOR_MAX_WIDTH)
+            cellUnit += step;
+    }
+
+    // 1cm scale
+    if (cellUnit == step && (nodeXToPixel(cellUnit) * zoomedScale > SCALE_INDICATOR_MAX_WIDTH)) {
+        step = 0.0001;
+        cellUnit = step;
+        while(nodeXToPixel(cellUnit) * zoomedScale < SCALE_INDICATOR_MAX_WIDTH)
+            cellUnit += step;
+    }
+
     const rootCoordinateValue = nodeCellToZoneCoordinate({x: 0, y: 0});
     let cellUnitCoordinateValue = nodeCellToZoneCoordinate({x: cellUnit, y: cellUnit});
 
-    const _valueX = _.round(cellUnitCoordinateValue.x - rootCoordinateValue.x, 1);
+    let _unit = 'm';
+    let _valueX = _.round(cellUnitCoordinateValue.x - rootCoordinateValue.x, Math.abs(Math.log(step)));
+
+    if (step == 0.0001) {
+        _unit = 'cm';
+        _valueX = _.round(_valueX * 100, 1);
+    }
     const startX = {
         x: (screenWidth) - 30 - nodeXToPixel(cellUnit) * zoomedScale,
         y: (screenHeight) - 30,
-        value: _valueX,
+        value: `${_valueX} ${_unit}`,
     }
     const endX = {
         x: (screenWidth) - 30,
         y: (screenHeight) - 30,
-        value: _valueX
-        // value: _.round(cellUnit, 2)
+        value: `${_valueX} ${_unit}`,
     }
-
-    // get scale indicator for y dimension
-    /*
-    cellUnit = step;
-    while(nodeYToPixel(cellUnit) * zoomedScale < SCALE_INDICATOR_MAX_WIDTH)
-        cellUnit += step;
-    cellUnitCoordinateValue = nodeCellToZoneCoordinate({x: cellUnit, y: cellUnit});
-
-    const _yIsUp = contourData.yDirection == 'up';
-    const _valueY = Math.abs(_.round(cellUnitCoordinateValue.y - rootCoordinateValue.y, 1));
-    const startY = {
-        x: (screenWidth) - 30,
-        y: (screenHeight) - 40 - nodeYToPixel(cellUnit) * zoomedScale,
-        value: _valueY,
-        // value: _.round(cellUnit, 2)
-    }
-    const endY = {
-        x: (screenWidth) - 30,
-        y: (screenHeight) - 40,
-        value: _valueY
-        // value: _.round(cellUnit, 2)
-    }
-    */
-
-    return {
-        startX, endX,
-        /*
-        loY: _yIsUp ? startY:endY,
-        hiY: _yIsUp ? endY:startY
-        */
-    };
+    return { startX, endX };
 }
 
 function getWellsPosition(contourData, transform) {
@@ -560,6 +559,7 @@ function getTrajectoriesPosition(contourData, transform) {
 const DEFAULT_NUMBER_OF_TICKS = 50;
 const DEFAULT_SCALE_BAR_LENGTH = 150;
 const DEFAULT_LEGEND_DIRECTION = 'vertical';
+const DEFAULT_CONTOUR_UNIT = 'm';
 const DEFAULT_LEGEND_FONT_SIZE = 12;
 function getColorLegendData (contourData, transform) {
     const legend = {};
@@ -570,6 +570,7 @@ function getColorLegendData (contourData, transform) {
     // const negativeData = contourData.negativeData || false;
     const numberOfTicks = contourData.colorLegendTicks || DEFAULT_NUMBER_OF_TICKS;
     const colorScale = contourData.colorScale;
+    const contourUnit = contourData.contourUnit || DEFAULT_CONTOUR_UNIT;
     const extent = d3.extent(colorScale.domain());
     const ticks = colorScale.ticks(numberOfTicks);
     const histogramGenerator = d3.histogram()
@@ -591,7 +592,7 @@ function getColorLegendData (contourData, transform) {
         }
     }
 
-    legend.title = "Depth";
+    legend.title = `Depth (${contourUnit})`;
     legend.ticks = ticks;
     legend.maxTick = d3.max(ticks);
     legend.minTick = d3.min(ticks);
@@ -986,6 +987,45 @@ function drawContour(d3Container, contourData, transform, force=null) {
             context.restore();
         })
     }
+
+    // draw north sign
+    requestAnimationFrame(() => {
+        context.save();
+        const canvasDOM = d3Canvas.node();
+        const cWidth = canvasDOM.width;
+        const cHeight = canvasDOM.height;
+
+        context.fillStyle = "green";
+        context.strokeStyle = "green";
+
+        // arrow body
+        context.translate(cWidth-50, 50);
+        context.fillRect(-5, -20, 10, 40);
+        // arrow vertex
+        if (cachedContourData && cachedContourData.grid && cachedContourData.grid.yDirection != 'up')
+            context.rotate(Math.PI);
+        context.translate(0, -20);
+        context.beginPath();
+        context.moveTo(0, 0);
+        context.lineTo(-10, 5);
+        context.lineTo(0, -20);
+        context.lineTo(10, 5);
+        context.closePath();
+        context.fill();
+        context.translate(0, 20);
+        if (cachedContourData && cachedContourData.grid && cachedContourData.grid.yDirection != 'up')
+            context.rotate(Math.PI);
+        // draw text
+        context.strokeStyle = "white";
+        context.fillStyle = "black";
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+        context.font = "bold 20px Sans-serif";
+        context.strokeText("North", 0, 0);
+        context.fillText("North", 0, 0);
+
+        context.restore();
+    })
 
     // context.restore();
 }

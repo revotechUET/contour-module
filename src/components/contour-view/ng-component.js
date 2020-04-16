@@ -10,7 +10,8 @@ const propList = Array.isArray(vueComponent.props) ? vueComponent.props : Object
 const template = `
     <contour-view
         ng-non-bindable
-        :values="values" :n-rows="nRows" :n-cols="nCols"
+        :values="values" :contour-unit="contourUnit"
+        :n-rows="nRows" :n-cols="nCols"
         :min-x="minX" :max-x="maxX"
         :min-y="minY" :max-y="maxY"
         :color-scale="colorScale" :step="step" :major-every="majorEvery"
