@@ -509,6 +509,37 @@ function getScalePosition(contourData, transform, d3Canvas) {
     return { startX, endX };
 }
 
+const icon_well_path = 'M413.9,455.1h-9.6L319.2,37.7h1.9c7.1,0,12.9-5.8,12.9-12.9V14.7c0-7.1-5.8-12.9-12.9-12.9H170.9c-7.1,0-12.9,5.8-12.9,12.9  v10.1c0,7.1,5.8,12.9,12.9,12.9h0.9L86.8,455.1H76.6c-7.1,0-12.9,5.8-12.9,12.9v10.1c0,7.1,5.8,12.9,12.9,12.9h48.6  c7.1,0,12.9-5.8,12.9-12.9v-10.1c0-7.1-5.8-12.9-12.9-12.9h-1.8l20-98.3H228v98.3h-6.3c-7.1,0-12.9,5.8-12.9,12.9v10.1  c0,7.1,5.8,12.9,12.9,12.9h48.6c7.1,0,12.9-5.8,12.9-12.9v-10.1c0-7.1-5.8-12.9-12.9-12.9H264v-98.3h83.6l20,98.3h-2.3  c-7.1,0-12.9,5.8-12.9,12.9v10.1c0,7.1,5.8,12.9,12.9,12.9h48.6c7.1,0,12.9-5.8,12.9-12.9v-10.1C426.8,460.9,421,455.1,413.9,455.1z   M310.1,172.8H264V37.7h18.6L310.1,172.8z M228,37.7v135.2H181l27.6-135.2H228z M150.8,320.9l22.9-112.2H228v112.2H150.8z   M264,320.9V208.7h53.4l22.9,112.2H264z';
+const icon_arrow_up_path = 'M442.627,185.388L265.083,7.844C260.019,2.78,253.263,0,245.915,0c-7.204,0-13.956,2.78-19.02,7.844L49.347,185.388    c-10.488,10.492-10.488,27.568,0,38.052l16.12,16.128c5.064,5.06,11.82,7.844,19.028,7.844c7.204,0,14.192-2.784,19.252-7.844    l103.808-103.584v329.084c0,14.832,11.616,26.932,26.448,26.932h22.8c14.832,0,27.624-12.1,27.624-26.932V134.816l104.396,104.752    c5.06,5.06,11.636,7.844,18.844,7.844s13.864-2.784,18.932-7.844l16.072-16.128C453.163,212.952,453.123,195.88,442.627,185.388z';
+const icon_arrow_down_path = 'M49.4,306.6l177.5,177.5c5.1,5.1,11.8,7.8,19.2,7.8c7.2,0,14-2.8,19-7.8l177.5-177.5c10.5-10.5,10.5-27.6,0-38.1    l-16.1-16.1c-5.1-5.1-11.8-7.8-19-7.8c-7.2,0-14.2,2.8-19.3,7.8L284.4,356V26.9C284.4,12.1,272.8,0,258,0h-22.8    c-14.8,0-27.6,12.1-27.6,26.9v330.3L103.2,252.4c-5.1-5.1-11.6-7.8-18.8-7.8s-13.9,2.8-18.9,7.8l-16.1,16.1    C38.8,279,38.9,296.1,49.4,306.6z';
+const icon_search_path = 'M 93.148438 80.832031 C 109.5 57.742188 104.03125 25.769531 80.941406 9.421875 C 57.851562 -6.925781 25.878906 -1.460938 9.53125 21.632812 C -6.816406 44.722656 -1.351562 76.691406 21.742188 93.039062 C 38.222656 104.707031 60.011719 105.605469 77.394531 95.339844 L 115.164062 132.882812 C 119.242188 137.175781 126.027344 137.347656 130.320312 133.269531 C 134.613281 129.195312 134.785156 122.410156 130.710938 118.117188 C 130.582031 117.980469 130.457031 117.855469 130.320312 117.726562 Z M 51.308594 84.332031 C 33.0625 84.335938 18.269531 69.554688 18.257812 51.308594 C 18.253906 33.0625 33.035156 18.269531 51.285156 18.261719 C 69.507812 18.253906 84.292969 33.011719 84.328125 51.234375 C 84.359375 69.484375 69.585938 84.300781 51.332031 84.332031 C 51.324219 84.332031 51.320312 84.332031 51.308594 84.332031 Z M 51.308594 84.332031';
+const SUPPORTED_ICONS = {
+    'well': {
+        path: icon_well_path,
+        scale: 0.05,
+        offsetX: 0.05 * 270,
+        offsetY: 0.05 * 530
+    },
+    'arrow_up': {
+        path: icon_arrow_up_path,
+        scale: 0.05,
+        offsetX: 0.05 * 270,
+        offsetY: 0.05 * 530
+    },
+    'arrow_down': {
+        path: icon_arrow_down_path,
+        scale: 0.05,
+        offsetX: 0.05 * 270,
+        offsetY: 0.05 * 530
+    },
+    'seach': {
+        path: icon_search_path,
+        scale: 0.05,
+        offsetX: 0.05 * 270,
+        offsetY: 0.05 * 530
+    }
+}
+
 function getWellsPosition(contourData, transform) {
     // console.log("%c vue - recalculating wells", 'color: red');
     const wPos = [];
@@ -525,6 +556,14 @@ function getWellsPosition(contourData, transform) {
             y: nodeYToPixel(nodePos.y) * zoomedScale,
             well
         })
+        if (well.popupConfig) {
+            const popupCfg = well.popupConfig;
+            const popupPos = nodeCellToZoneCoordinate.invert({x: popupCfg.xCoord, y: popupCfg.yCoord});
+            wPos[wPos.length - 1].popupPos = {
+                x: nodeXToPixel(popupPos.x) * zoomedScale,
+                y: nodeYToPixel(popupPos.y) * zoomedScale,
+            }
+        }
     })
 
     return wPos;
@@ -551,6 +590,16 @@ function getTrajectoriesPosition(contourData, transform) {
             points,
             trajectory
         });
+
+        if (trajectory.endPoint) {
+            const endPoint = trajectory.endPoint;
+            const nodePos = nodeCellToZoneCoordinate.invert({x: endPoint.xCoord, y: endPoint.yCoord});
+            tPos[tPos.length - 1].endPoint = {
+                x: nodeXToPixel(nodePos.x) * zoomedScale,
+                y: nodeYToPixel(nodePos.y) * zoomedScale,
+            }
+        }
+
     })
 
     return tPos;
@@ -667,12 +716,6 @@ function drawContour(d3Container, contourData, transform, force=null) {
             value: cachedContourData[i].value.toFixed(0),
         });
     })
-
-    // context.save();
-    // context.clearRect(0, 0, d3Canvas.attr("width"), d3Canvas.attr("height"));
-    // if (cachedTransform) {
-    //     context.translate(cachedTransform.x, cachedTransform.y);
-    // }
 
     //draw grid
     if (cachedContourData.grid.show && cachedGrid) {
@@ -851,20 +894,43 @@ function drawContour(d3Container, contourData, transform, force=null) {
             context.lineTo(endX.x, endX.y);
             context.stroke();
             context.fillText(endX.value, endX.x - 5, endX.y);
-
-            /*
-            const startY = cachedScalePosition.loY;
-            const endY = cachedScalePosition.hiY;
-            context.moveTo(startY.x, startY.y);
-            context.lineTo(startY.x + 10, startY.y);
-            context.lineTo(endY.x + 10, endY.y);
-            context.lineTo(endY.x, endY.y);
-            // context.closePath();
-            context.translate(endY.x, endY.y)
-            context.rotate(-90 * Math.PI / 180);
-            context.fillText(endY.value, -5, 0);
-            */
             context.closePath();
+            context.restore();
+        })
+    }
+    if (cachedContourData.showTrajectory && cachedTrajectoriesPosition.length) {
+        requestAnimationFrame(() => {
+            // console.log("vue - trajectory indicator", cachedScalePosition);
+            context.save();
+            if (cachedTransform) {
+                context.translate(cachedTransform.x, cachedTransform.y);
+            }
+
+            const trajectories = cachedTrajectoriesPosition || [];
+            trajectories.forEach(t => {
+                if (!t.points.length || t.points.length == 1) return;
+                context.strokeStyle = t.trajectory.color || 'black';
+                context.lineWidth = t.trajectory.lineWidth || 1;
+                context.beginPath();
+                t.points.forEach((tp, tpIdx) => {
+                    if(tpIdx == 0)
+                        context.moveTo(tp.x, tp.y);
+                    else
+                        context.lineTo(tp.x, tp.y);
+                })
+                context.stroke();
+
+                if (t.endPoint) {
+                    context.fillStyle = t.trajectory.endPoint.color || 'black';
+                    const radius = t.trajectory.endPoint.radius || 2;
+                    const centerX = t.endPoint.x;
+                    const centerY = t.endPoint.y;
+                    context.beginPath();
+                    context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+                    context.fill();
+                }
+            })
+
             context.restore();
         })
     }
@@ -882,43 +948,43 @@ function drawContour(d3Container, contourData, transform, force=null) {
             context.textAlign = 'center';
             context.font = `${FONT_SIZE}px Sans-Serif`;
             cachedWellsPosition.forEach(wellPos => {
-                context.beginPath();
-                context.arc(wellPos.x, wellPos.y, SYMBOL_SIZE / 2, 0, 2 * Math.PI, false);
-                context.fillStyle = wellPos.well.color || 'lightgreen';
+                const icon = SUPPORTED_ICONS[wellPos.well.icon || 'well'];
+                context.fillStyle = wellPos.well.color || 'black';
+                context.save();
+                context.translate(wellPos.x - icon.offsetX,  wellPos.y - icon.offsetY);
+                context.scale(icon.scale, icon.scale);
+                const path = new Path2D(icon.path);
+                context.fill(path);
                 context.closePath();
-                context.fill();
-                context.fillText(wellPos.well.name, wellPos.x, wellPos.y - 10);
-            })
-            context.restore();
-        })
-    }
+                context.restore();
 
-    if (cachedContourData.showTrajectory && cachedTrajectoriesPosition.length) {
-        requestAnimationFrame(() => {
-            // console.log("vue - trjectory indicator", cachedScalePosition);
-            context.save();
-            if (cachedTransform) {
-                context.translate(cachedTransform.x, cachedTransform.y);
-            }
+                // draw popup
+                let popupPos = wellPos.popupPos || wellPos;
+                if (popupPos == wellPos) {
+                    popupPos = _.clone(wellPos);
+                    popupPos.y -= icon.offsetY;
+                }
+                const drawContent = _.get(wellPos, 'well.popupConfig.content', wellPos.well.name);
+                const textWidth = context.measureText(drawContent).width;
+                context.strokeStyle = "black";
+                context.fillStyle = 'white';
+                context.strokeRect(popupPos.x - textWidth / 2 - 5, popupPos.y - 15 - FONT_SIZE, textWidth + 10, FONT_SIZE + 5);
+                context.fillRect(popupPos.x - textWidth / 2 - 5, popupPos.y - 15 - FONT_SIZE, textWidth + 10, FONT_SIZE + 5);
 
-            const trajectories = cachedTrajectoriesPosition || [];
-            trajectories.forEach(t => {
-                if (!t.points.length || t.points.length == 1) return;
-                context.strokeStyle = t.trajectory.color || 'steelblue';
-                context.lineWidth = t.trajectory.lineWidth || 1;
                 context.beginPath();
-                t.points.forEach((tp, tpIdx) => {
-                    if(tpIdx == 0)
-                        context.moveTo(tp.x, tp.y);
-                    else
-                        context.lineTo(tp.x, tp.y);
-                })
+                context.moveTo(popupPos.x - 5, popupPos.y - 11);
+                context.lineTo(popupPos.x, popupPos.y);
+                context.lineTo(popupPos.x + 5, popupPos.y - 11);
                 context.stroke();
+                context.fill();
+                context.fillStyle = 'black';
+                context.fillText(drawContent, popupPos.x, popupPos.y - 15);
+                context.closePath();
             })
-
             context.restore();
         })
     }
+
 
     if (cachedContourData.showColorScaleLegend && cachedColorLegendData) {
         requestAnimationFrame(() => {
@@ -980,6 +1046,7 @@ function drawContour(d3Container, contourData, transform, force=null) {
                 for(const tIdx in ticks) {
                     context.fillRect(0, scaleY(ticks[tIdx]), binHeightScale(bins[tIdx]), binWidth);
                 }
+                context.closePath();
             } else {
                 // LATER: horizontally draw
             }
@@ -989,6 +1056,7 @@ function drawContour(d3Container, contourData, transform, force=null) {
     }
 
     // draw north sign
+    /* USING LATER WHEN SUPPORT FOR MAP ROTATION
     requestAnimationFrame(() => {
         context.save();
         const canvasDOM = d3Canvas.node();
@@ -1026,8 +1094,7 @@ function drawContour(d3Container, contourData, transform, force=null) {
 
         context.restore();
     })
-
-    // context.restore();
+    */
 }
 
 function contourDataToPixelMap({type, value, coordinates}, transform, xToPixel, yToPixel) {

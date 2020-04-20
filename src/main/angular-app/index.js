@@ -41,6 +41,12 @@ angular
                 name: 'test well trajectory',
                 color: 'green',
                 lineWidth: 2,
+                endPoint: {
+                    radius: 5,
+                    color: 'blue',
+                    xCoord: 444375,
+                    yCoord: 1144754
+                }
             },
             {
                 points: [
@@ -54,20 +60,38 @@ angular
                     {xCoord: 434130, yCoord: 1135700},
                 ],
                 name: 'TEST WELL trajectory',
-                color: 'white',
+                color: 'black',
                 lineWidth: 3,
+                endPoint: {
+                    radius: 2,
+                    color: 'magenta',
+                    xCoord: 434130,
+                    yCoord: 1135700
+                }
             }
         ];
         this.wells = [
             {
                 name: 'test well',
                 xCoord: 444750,
-                yCoord: 1144440
+                yCoord: 1144440,
+                /*
+                popupConfig: {
+                    xCoord: 444375, yCoord: 1144754,
+                    content: "TITLE WELL 1"
+                }
+                */
             },
             {
                 name: 'TEST WELL',
                 xCoord: 434040,
-                yCoord: 1135000
+                yCoord: 1135000,
+                /*
+                popupConfig: {
+                    xCoord: 434130, yCoord: 1135700,
+                    content: "TITLE WELL 2"
+                }
+                */
             }
         ];
 
@@ -120,11 +144,11 @@ angular
             rootCtrl.maxValue = domain[1];
             $scope.$digest();
         },
-        this.onColorScaleChanged = function(colorScale) {
-            // console.log("color scale changed");
-            rootCtrl.colorScale = colorScale;
-            $scope.$digest();
-        }
+            this.onColorScaleChanged = function(colorScale) {
+                // console.log("color scale changed");
+                rootCtrl.colorScale = colorScale;
+                $scope.$digest();
+            }
         this.onScaleChanged = (_scl) => {
             rootCtrl.scale = _scl
             $timeout(() => { $scope.$digest(); })
