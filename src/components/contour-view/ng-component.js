@@ -14,6 +14,7 @@ const template = `
         :n-rows="nRows" :n-cols="nCols"
         :min-x="minX" :max-x="maxX"
         :min-y="minY" :max-y="maxY"
+        :x-inc="xInc" :y-inc="yInc"
         :color-scale="colorScale" :step="step" :major-every="majorEvery"
         :show-grid="showGrid" :grid-major="gridMajor" :grid-minor="gridMinor"
         :grid-nice="gridNice" :y-direction="yDirection"

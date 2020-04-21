@@ -158,6 +158,8 @@ const component = {
             const nodeToPixelY = canvasDOM.__nodeToPixelY;
             const nodeToCoord = canvasDOM.__gridToCoordinate;
 
+            // if (!nodeToCoord) return;
+
             const nodeCoord = nodeToCoord.invert({x: xCoord, y: yCoord});
             const pixelX = nodeToPixelX(nodeCoord.x);
             const pixelY = nodeToPixelY(nodeCoord.y);
@@ -964,7 +966,7 @@ function drawContour(d3Container, contourData, transform, force=null) {
                     popupPos = _.clone(wellPos);
                     popupPos.y -= icon.offsetY;
                 }
-                const drawContent = _.get(wellPos, 'well.popupConfig.content', wellPos.well.name);
+                const drawContent = _.get(wellPos, 'well.displayContent', wellPos.well.name);
                 const textWidth = context.measureText(drawContent).width;
                 context.strokeStyle = "black";
                 context.fillStyle = 'white';
