@@ -862,7 +862,8 @@ function drawContour(d3Container, contourData, transform, force=null) {
                         let i = 0;
                         while(i < points.length) {
                             const _points = points.slice(i, i + LABEL_STEP);
-                            context.textPath(path.value, _.flatten(_points));
+                            const _value = cachedContourData.negativeData ? -Math.abs(path.value) : path.value;
+                            context.textPath(String(_value), _.flatten(_points));
                             i+=LABEL_STEP;
                         }
                     })
