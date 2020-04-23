@@ -869,14 +869,15 @@ function drawContour(d3Container, contourData, transform, force=null) {
                 if (path.isMajor) {
                     // draw value above path
                     path.pathData.forEach((ring) => {
-                        const points = ring[0];
-                        let i = 0;
-                        while(i < points.length) {
-                            const _points = points.slice(i, i + LABEL_STEP);
-                            const _value = cachedContourData.negativeData ? -Math.abs(path.value) : path.value;
-                            context.textPath(String(_value), _.flatten(_points));
-                            i+=LABEL_STEP;
-                        }
+                        ring.forEach(points => {
+                            let i = 0;
+                            while(i < points.length) {
+                                const _points = points.slice(i, i + LABEL_STEP);
+                                const _value = cachedContourData.negativeData ? -Math.abs(path.value) : path.value;
+                                context.textPath(String(_value), _.flatten(_points));
+                                i+=LABEL_STEP;
+                            }
+                        })
                     })
                 }
             })
