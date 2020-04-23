@@ -10,7 +10,7 @@ const component = {
     props: [
         'values', "contourUnit",
         "nRows", "nCols", "colorScale", "step", "majorEvery",
-        "labelFontSize", "xInc", "yInc",
+        "labelFontSize", "incXDirection", "incYDirection",
         "showGrid", "gridMajor", "gridMinor", "gridNice",
         "minX", "maxX", "minY", "maxY",
         'onScaleChanged', 'yDirection', "showScale",
@@ -85,12 +85,12 @@ const component = {
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
         /*
-        xInc: function(val) {
-            // console.log("vue - xInc changed");
+        incXDirection: function(val) {
+            // console.log("vue - incXDirection changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
-        yInc: function(val) {
-            // console.log("vue - yInc changed");
+        incYDirection: function(val) {
+            // console.log("vue - incYDirection changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
         */
@@ -200,8 +200,8 @@ const component = {
                 labelInterval: this.labelInterval,
                 colorScale: this.colorScale,
                 onScaleChanged: this.onScaleChanged,
-                xInc: this.xInc || 50,
-                yInc: this.yInc || 50,
+                xInc: this.incXDirection || 50,
+                yInc: this.incYDirection || 50,
                 minX: this.minX,
                 maxX: this.maxX,
                 minY: this.minY,
