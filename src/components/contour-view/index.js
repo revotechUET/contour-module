@@ -152,7 +152,7 @@ const component = {
         */
     },
     methods: {
-        setCenter: function(xCoord, yCoord) {
+        setCenter: function(xCoord, yCoord, centerX, centerY) {
             // console.log(`vue - setting center to (${xCoord}, ${yCoord})`);
             if (!_.isFinite(xCoord) || !_.isFinite(yCoord)) return;
             // neccessary transforms
@@ -169,8 +169,11 @@ const component = {
             const pixelY = nodeToPixelY(nodeCoord.y);
             const transformed = d3.zoomTransform(canvasDOM);
 
-            const addX = (canvasDOM.width/2 - (pixelX * transformed.k  + transformed.x)) / transformed.k;
-            const addY = (canvasDOM.height/2 - (pixelY * transformed.k + transformed.y)) / transformed.k;
+            const centerPointX = centerX || canvasDOM.width/2;
+            const centerPointY = centerY || canvasDOM.height/2;
+
+            const addX = (centerPointX - (pixelX * transformed.k  + transformed.x)) / transformed.k;
+            const addY = (centerPointY - (pixelY * transformed.k + transformed.y)) / transformed.k;
 
             if (!_.isFinite(addX) || !_.isFinite(addY)) return;
 
