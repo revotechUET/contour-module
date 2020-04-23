@@ -23,6 +23,7 @@ const template = `
         :show-label="showLabel" :label-font-size="labelFontSize"
         :show-color-scale-legend="showColorScaleLegend" :color-legend-ticks="colorLegendTicks"
         :negative-data="negativeData"
+        :label-interval="labelInterval"
         :on-component-mounted="onComponentMounted"
         :on-scale-changed="onScaleChanged">
     </contour-view>

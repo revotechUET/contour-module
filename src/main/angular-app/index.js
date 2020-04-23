@@ -15,6 +15,7 @@ angular
         this.step = 100;
         this.majorEvery = 5;
         this.fontSize = 2;
+        this.labelInterval = 5000;
         this.showLabel = false;
         this.showScale = true;
         this.showGrid = true;

@@ -26,6 +26,7 @@
                 show-color-scale-legend-get="rootCtrl.getter('showColorScaleLegend')"
                 color-legend-ticks-get="rootCtrl.getter('colorScaleLegendTicks')"
                 show-label-get="rootCtrl.getter('showLabel')"
+                label-interval-get="rootCtrl.getter('labelInterval')"
                 show-scale-get="rootCtrl.getter('showScale')"
                 label-font-size-get="rootCtrl.getter('fontSize')"
                 y-direction-get="rootCtrl.getter('yDirection')"
@@ -86,6 +87,8 @@
                 <br/>
                 <label>fontSize</label>
                 <input type="number" ng-model="rootCtrl.fontSize"/>
+                <label>labelInterval</label>
+                <input type="number" ng-model="rootCtrl.labelInterval"/>
                 <label>Show Text</label>
                 <input type="checkbox" ng-model="rootCtrl.showLabel"/>
                 <br/>

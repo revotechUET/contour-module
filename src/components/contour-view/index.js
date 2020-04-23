@@ -10,14 +10,14 @@ const component = {
     props: [
         'values', "contourUnit",
         "nRows", "nCols", "colorScale", "step", "majorEvery",
-        "labelFontSize", "showLabel", "xInc", "yInc",
+        "labelFontSize", "xInc", "yInc",
         "showGrid", "gridMajor", "gridMinor", "gridNice",
         "minX", "maxX", "minY", "maxY",
         'onScaleChanged', 'yDirection', "showScale",
         'wells', "showWell",
         'trajectories', 'showTrajectory',
         "showColorScaleLegend", 'colorLegendTicks',
-        "negativeData",
+        "negativeData", "showLabel", "labelInterval",
         'onComponentMounted'
     ],
     template,
@@ -50,6 +50,10 @@ const component = {
         },
         showLabel: function(val) {
             // console.log("vue - showLabel changed");
+            updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
+        },
+        labelInterval: function(val) {
+            // console.log("vue - labelInterval changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
         },
         showGrid: function(val) {
@@ -193,10 +197,11 @@ const component = {
                 gridMinor: this.gridMinor,
                 gridNice: this.gridNice,
                 labelFontSize: this.labelFontSize,
+                labelInterval: this.labelInterval,
                 colorScale: this.colorScale,
                 onScaleChanged: this.onScaleChanged,
-                xInc: this.xInc,
-                yInc: this.yInc,
+                xInc: this.xInc || 50,
+                yInc: this.yInc || 50,
                 minX: this.minX,
                 maxX: this.maxX,
                 minY: this.minY,
@@ -314,6 +319,7 @@ function updateContourData(container, dataFn, forceDrawTarget=null) {
         showTrajectory: data.showTrajectory,
         showWell: data.showWell,
         labelFontSize: data.labelFontSize,
+        labelInterval: data.labelInterval,
         colorScale: data.colorScale,
         showColorScaleLegend: data.showColorScaleLegend,
         colorLegendTicks: data.colorLegendTicks,
@@ -332,7 +338,9 @@ function updateContourData(container, dataFn, forceDrawTarget=null) {
             minorTick: data.gridMinor,
             minX: data.minX, maxX: data.maxX,
             minY: data.minY, maxY: data.maxY,
-            yDirection: data.yDirection
+            yDirection: data.yDirection,
+            xInc: data.xInc,
+            yInc: data.yInc
         },
         values: data.values, // for draw color legend
         contourUnit: data.contourUnit,
@@ -709,6 +717,7 @@ function drawContour(d3Container, contourData, transform, force=null) {
     // editing props
     cachedPath2Ds.showLabel = cachedContourData.showLabel;
     cachedPath2Ds.labelFontSize = cachedContourData.labelFontSize;
+    cachedPath2Ds.labelInterval = cachedContourData.labelInterval;
     cachedPath2Ds.forEach((path, i) => {
         Object.assign(path, {
             fillColor: cachedContourData.negativeData
@@ -853,7 +862,9 @@ function drawContour(d3Container, contourData, transform, force=null) {
             context.fillStyle =  "black";
             context.font = `${cachedPath2Ds.labelFontSize}px Sans-Serif`;
             context.lineWidth = 1;
-            const LABEL_STEP = 30;
+            const labelInterval = cachedPath2Ds.labelInterval || 5000;
+            const xInc = cachedContourData.grid.xInc || 50;
+            const LABEL_STEP = Math.round(labelInterval / xInc); // in node
             cachedPath2Ds.forEach((path) => {
                 if (path.isMajor) {
                     // draw value above path
