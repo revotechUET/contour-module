@@ -1,7 +1,12 @@
 div.contour-container {
     width: 100%;
     height: 100%;
+    position: relative;
 }
 div.contour-container > canvas {
+    position: absolute;
     border: 1px solid black;
+}
+div.contour-container > canvas.ruler-layer {
+    background-color: rgba(0,0,0,0.4);
 }

@@ -10,6 +10,9 @@ angular
         this.headers = {};
         this.values = [];
         this.minValue = 0;
+        this.disableZoom = false;
+        this.disableMouseCoordinate = false;
+        this.enableRulerMode = false;
         this.maxValue = 1;
         this.colorScale = d3.scaleLinear().range(['red', 'blue']);
         this.step = 100;
@@ -23,6 +26,8 @@ angular
         this.gridMinor = 4;
         this.gridNice = true;
         this.scale = 1;
+        this.mouseCoord = {x: null, y: null};
+        this.rulerDistance = null;
         this.yDirection = 'up';
         this.showWell = true;
         this.showTrajectory = true;
@@ -133,6 +138,19 @@ angular
             setContourViewCenter = (xCoord, yCoord) => {
                 contourViewComponent.setCenter.call(contourViewComponent, xCoord, yCoord);
             }
+        }
+        this.onContourViewMouseMove = function(xy) {
+            rootCtrl.mouseCoord.x = xy.x;
+            rootCtrl.mouseCoord.y = xy.y;
+            // console.log(xy);
+            const nodeX = Math.round(xy.nodeX);
+            const nodeY = Math.floor(xy.nodeY);
+            rootCtrl.mouseValue = rootCtrl.values[rootCtrl.headers.numOfCols * nodeY + nodeX];
+            $timeout(() => $scope.$digest())
+        }
+        this.onRulerEnd = function(distance) {
+            rootCtrl.rulerDistance = distance;
+            $timeout(() => $scope.$digest())
         }
         this.onDataChanged = function(changedData) {
             // console.log('on data changed');

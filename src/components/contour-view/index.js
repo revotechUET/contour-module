@@ -18,7 +18,9 @@ const component = {
         'trajectories', 'showTrajectory',
         "showColorScaleLegend", 'colorLegendTicks',
         "negativeData", "showLabel", "labelInterval",
-        'onComponentMounted'
+        'onComponentMounted', "onMouseMove", "disableZoom",
+        "disableMouseCoordinate", "enableRulerMode",
+        'onRulerEnd'
     ],
     template,
     mounted() {
@@ -144,6 +146,17 @@ const component = {
             console.log("vue - contourUnit changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn, 'color');
         },
+        disableZoom: function() {
+            console.log("vue - disableZoom changed");
+            this.onDisableZoomChanged();
+        },
+        disableMouseCoordinate: function() {
+            console.log("vue - disableMouseCoordinate changed");
+            this.onDisableMouseMoveChanged();
+        },
+        enableRulerMode: function() {
+            this.onEnableRulerModeChanged();
+        }
         /*
         negativeData: function(val) {
             console.log("vue - negativeData changed");
@@ -152,6 +165,61 @@ const component = {
         */
     },
     methods: {
+        onEnableRulerModeChanged: function() {
+            const d3Canvas = this.__contour.d3Canvas;
+            const d3Container = d3.select(this.$refs.drawContainer);
+            if (this.enableRulerMode) {
+                const onRulerEndFn = this.onRulerEnd;
+                const dragBehavior = d3.drag()
+                    .on('start', function() {
+                        const mouse = d3.mouse(this);
+                        if(!mouse || !mouse.length) return;
+                        // console.log("start", mouse);
+                        onDragStart(mouse[0], mouse[1], d3Canvas, d3Container);
+                    })
+                    .on('drag', function() {
+                        const mouse = d3.mouse(this);
+                        if(!mouse || !mouse.length) return;
+                        // console.log("dragging", mouse);
+                        onDragging(mouse[0], mouse[1], d3Canvas, d3Container);
+                    })
+                    .on('end', function() {
+                        const mouse = d3.mouse(this);
+                        if(!mouse || !mouse.length) return;
+                        // console.log("end", mouse);
+                        onDragEnd(mouse[0], mouse[1], d3Canvas, d3Container, onRulerEndFn);
+                    });
+                const rulerCanvas = d3Container.append("canvas")
+                    .attr('class', 'ruler-layer')
+                    .attr('width', d3Canvas.node().width)
+                    .attr('height', d3Canvas.node().height);
+                rulerCanvas.call(dragBehavior);
+            } else {
+                d3Container.selectAll('canvas.ruler-layer').remove();
+            }
+        },
+        onDisableMouseMoveChanged: function() {
+            const d3Canvas = this.__contour.d3Canvas;
+            const onMouseMoveFn = this.onMouseMove;
+            if (this.disableMouseCoordinate) {
+                d3Canvas.on("mousemove", null);
+            } else {
+                d3Canvas.on("mousemove", function() {
+                    const mouse = d3.mouse(this);
+                    if (!mouse || !mouse.length) return;
+                    onMouseMoveDebounced(mouse[0], mouse[1], d3Canvas, onMouseMoveFn);
+                });
+            }
+        },
+        onDisableZoomChanged: function() {
+            const d3Canvas = this.__contour.d3Canvas;
+            const zoomBehavior = this.__contour.zoomBehavior;
+            if (this.disableZoom) {
+                d3Canvas.on('.zoom', null);
+            } else {
+                d3Canvas.call(zoomBehavior);
+            }
+        },
         setCenter: function(xCoord, yCoord, centerX, centerY) {
             // console.log(`vue - setting center to (${xCoord}, ${yCoord})`);
             if (!_.isFinite(xCoord) || !_.isFinite(yCoord)) return;
@@ -162,7 +230,7 @@ const component = {
             const nodeToPixelY = canvasDOM.__nodeToPixelY;
             const nodeToCoord = canvasDOM.__gridToCoordinate;
 
-            // if (!nodeToCoord) return;
+            if (!nodeToCoord) return;
 
             const nodeCoord = nodeToCoord.invert({x: xCoord, y: yCoord});
             const pixelX = nodeToPixelX(nodeCoord.x);
@@ -203,6 +271,8 @@ const component = {
                 labelInterval: this.labelInterval,
                 colorScale: this.colorScale,
                 onScaleChanged: this.onScaleChanged,
+                onMouseMove: this.onMouseMove,
+                onRulerEnd: this.onRulerEnd,
                 xInc: this.incXDirection || 50,
                 yInc: this.incYDirection || 50,
                 minX: this.minX,
@@ -230,6 +300,7 @@ function initContour(container, dataFn) {
     const containerHeight = d3Container.node().offsetHeight;
     const d3Canvas = d3Container.append("canvas")
         // .style('background-color', 'black')
+        .attr('class', 'draw-layer')
         .attr("width", containerWidth || 500)
         .attr("height", containerHeight || 500);
 
@@ -237,7 +308,14 @@ function initContour(container, dataFn) {
             .on("zoom", () => onCanvasZoom(d3Container, dataFn().onScaleChanged));
     d3Canvas.call(zoomBehavior);
 
+    d3Canvas.on('mousemove', function() {
+        const mouse = d3.mouse(this);
+        if (!mouse || !mouse.length) return;
+        onMouseMoveDebounced(mouse[0], mouse[1], d3Canvas, dataFn().onMouseMove);
+    })
+
     window.addEventListener("resize", _.debounce(() => updateCanvasOnResize(d3Container, d3Canvas), 200));
+
     return { d3Canvas, zoomBehavior };
 }
 
@@ -247,8 +325,107 @@ function updateCanvasOnResize(d3Container, d3Canvas) {
     d3Canvas
         .attr("width", containerWidth || 500)
         .attr("height", containerHeight || 500);
+    d3Container.selectAll('canvas.ruler-layer')
+        .attr("width", containerWidth || 500)
+        .attr("height", containerHeight || 500);
 
     drawContour(d3Container);
+}
+
+function getXYfromScreenPosition(x, y, canvasDOM) {
+    const nodeToPixelX = canvasDOM.__nodeToPixelX;
+    const nodeToPixelY = canvasDOM.__nodeToPixelY;
+    const nodeToCoord = canvasDOM.__gridToCoordinate;
+    const transformed = d3.zoomTransform(canvasDOM);
+    if (!nodeToPixelX || !nodeToPixelY || ! nodeToCoord) return null;
+    const nodeX = nodeToPixelX.invert((x - transformed.x) / transformed.k);
+    const nodeY = nodeToPixelY.invert((y - transformed.y) / transformed.k);
+    const XYCoord = nodeToCoord({x: nodeX, y: nodeY});
+    return Object.assign(XYCoord, {nodeX, nodeY});
+}
+
+const onMouseMoveDebounced = _.debounce(onMouseMove, 20);
+function onMouseMove(mouseX, mouseY, d3Canvas, onMouseMoveFn) {
+    const canvasDOM = d3Canvas.node();
+    const XYCoord = getXYfromScreenPosition(mouseX, mouseY, canvasDOM);
+    if (!XYCoord) return;
+    onMouseMoveFn && onMouseMoveFn(XYCoord);
+}
+
+function onDragStart(mouseX, mouseY, d3Canvas, d3Container) {
+    const rulerCanvasDOM = d3Container.select('canvas.ruler-layer').node();
+    const context = rulerCanvasDOM.getContext('2d');
+    context.clearRect(0, 0, rulerCanvasDOM.width, rulerCanvasDOM.height);
+    context.strokeStyle = '#fff';
+    context.lineWidth = 1;
+    context.beginPath();
+    context.arc(mouseX, mouseY, 5, 0, 2 * Math.PI, false);
+    context.stroke();
+    // context.strokeRect(mouseX - 5, mouseY - 5, 10, 10)
+    rulerCanvasDOM.__rulerStartPoint = {x: mouseX, y: mouseY};
+}
+function onDragging(mouseX, mouseY, d3Canvas, d3Container) {
+    const canvasDOM = d3Canvas.node();
+    const rulerCanvasDOM = d3Container.select('canvas.ruler-layer').node();
+    if (!rulerCanvasDOM.__rulerStartPoint) return;
+    const startX = rulerCanvasDOM.__rulerStartPoint.x;
+    const startY = rulerCanvasDOM.__rulerStartPoint.y;
+    const context = rulerCanvasDOM.getContext('2d');
+    context.clearRect(0, 0, rulerCanvasDOM.width, rulerCanvasDOM.height);
+    context.strokeStyle = "#fff";
+    context.lineWidth = 1;
+    context.fillStyle = "#fff";
+    context.font = "12px Sans-Serif";
+    context.textAlign = "center";
+
+    context.beginPath();
+    context.arc(startX, startY, 5, 0, 2 * Math.PI, false);
+    context.closePath();
+    context.stroke();
+    // context.strokeRect(startX - 5, startY - 5, 10, 10);
+    context.beginPath();
+    context.moveTo(startX, startY);
+    context.lineTo(mouseX, mouseY);
+    context.stroke();
+
+    const start = getXYfromScreenPosition(startX, startY, canvasDOM);
+    const end = getXYfromScreenPosition(mouseX, mouseY, canvasDOM);
+    const distance = getDistance(start, end);
+    context.fillText(_.round(distance, 2), (mouseX + startX) / 2, (mouseY + startY) / 2);
+}
+function getDistance(start, end) {
+    const x = start.x - end.x;
+    const y = start.y - end.y;
+    return Math.sqrt(x*x + y*y);
+}
+function onDragEnd(mouseX, mouseY, d3Canvas, d3Container, onDragEndFn) {
+    const canvasDOM = d3Canvas.node();
+    const rulerCanvasDOM = d3Container.select('canvas.ruler-layer').node();
+    if (!rulerCanvasDOM.__rulerStartPoint) return;
+    const startX = rulerCanvasDOM.__rulerStartPoint.x;
+    const startY = rulerCanvasDOM.__rulerStartPoint.y;
+    const context = rulerCanvasDOM.getContext('2d');
+    context.clearRect(0, 0, rulerCanvasDOM.width, rulerCanvasDOM.height);
+    context.strokeStyle = "#fff";
+    context.lineWidth = 1;
+
+    context.beginPath();
+    context.arc(startX, startY, 5, 0, 2 * Math.PI, false);
+    context.stroke();
+    context.beginPath();
+    context.arc(mouseX, mouseY, 5, 0, 2 * Math.PI, false);
+    context.stroke();
+
+    context.beginPath();
+    context.moveTo(startX, startY);
+    context.lineTo(mouseX, mouseY);
+    context.stroke();
+
+    const start = getXYfromScreenPosition(startX, startY, canvasDOM);
+    const end = getXYfromScreenPosition(mouseX, mouseY, canvasDOM);
+    delete rulerCanvasDOM.__rulerStartPoint;
+    if (!start || !end) return; 
+    onDragEndFn && onDragEndFn(getDistance(start, end));
 }
 
 function onCanvasZoom(d3Container, onScaleChanged) {
@@ -267,7 +444,7 @@ function updateCanvasTransform(d3Container, transform) {
 const updateContourDataDebounced = _.debounce(updateContourData, 200);
 function updateContourData(container, dataFn, forceDrawTarget=null) {
     const d3Container = d3.select(container);
-    const d3Canvas = d3Container.select('canvas');
+    const d3Canvas = d3Container.select('canvas.draw-layer');
     const context = d3Canvas.node().getContext("2d");
     const data = dataFn();
 
@@ -681,7 +858,7 @@ let cachedAxes = null;
 let cachedScalePosition = null;
 let cachedColorLegendData = null;
 function drawContour(d3Container, contourData, transform, force=null) {
-    const d3Canvas = d3Container.select('canvas');
+    const d3Canvas = d3Container.select('canvas.draw-layer');
     const context = d3Canvas.node().getContext("2d");
 
     const scaleChanged = (transform && cachedTransform && transform.k != cachedTransform.k)

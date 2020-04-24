@@ -6,7 +6,7 @@
     </head>
     <body>
         <div ng-app="myApp" ng-controller="rootController as rootCtrl">
-            <div style="width: 90vw;">
+            <div style="width: 90vw; height: 60vh;">
             <contour-view
                 values-get="rootCtrl.getter('values')"
                 n-rows-get="rootCtrl.getter('headers.numOfCols')"
@@ -36,6 +36,11 @@
                 show-well-get="rootCtrl.getter('showWell')"
                 trajectories-get="rootCtrl.getter('trajectories')"
                 show-trajectory-get="rootCtrl.getter('showTrajectory')"
+                disable-zoom-get="rootCtrl.getter('disableZoom')"
+                disable-mouse-coordinate-get="rootCtrl.getter('disableMouseCoordinate')"
+                enable-ruler-mode-get="rootCtrl.getter('enableRulerMode')"
+                on-mouse-move-get="rootCtrl.getter('onContourViewMouseMove')"
+                on-ruler-end-get="rootCtrl.getter('onRulerEnd')"
                 on-component-mounted-get="rootCtrl.getter('onContourViewMounted')"
                 on-scale-changed-get="rootCtrl.getter('onScaleChanged')">
             </contour-view>
@@ -52,6 +57,18 @@
                 max-val-get="rootCtrl.getter('maxValue')">
             </color-scale-generator>
             <div>
+                <label>Mouse Coord</label>
+                {{rootCtrl.mouseCoord.x}} - {{rootCtrl.mouseCoord.y}}
+                <div>mouseValue: {{rootCtrl.mouseValue}} (m)</div>
+                <div>Ruler: {{rootCtrl.rulerDistance}} (m)</div>
+                <br/>
+                <label>Disable Zoom</label>
+                <input type="checkbox" ng-model="rootCtrl.disableZoom"/>
+                <label>Disable Mouse Coordinate</label>
+                <input type="checkbox" ng-model="rootCtrl.disableMouseCoordinate"/>
+                <label>Enable Ruler Mode</label>
+                <input type="checkbox" ng-model="rootCtrl.enableRulerMode"/>
+                <br/>
                 <label>Negative import</label>
                 <input type="checkbox" ng-model="rootCtrl.negativeData"/>
                 <br/>

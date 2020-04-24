@@ -22,6 +22,11 @@ const template = `
         :show-trajectory='showTrajectory' :trajectories='trajectories'
         :show-label="showLabel" :label-font-size="labelFontSize"
         :show-color-scale-legend="showColorScaleLegend" :color-legend-ticks="colorLegendTicks"
+        :disable-zoom="disableZoom"
+        :disable-mouse-coordinate="disableMouseCoordinate"
+        :enable-ruler-mode="enableRulerMode"
+        :on-ruler-end="onRulerEnd"
+        :on-mouse-move="onMouseMove"
         :negative-data="negativeData"
         :label-interval="labelInterval"
         :on-component-mounted="onComponentMounted"
