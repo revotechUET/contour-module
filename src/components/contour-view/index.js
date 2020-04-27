@@ -917,7 +917,7 @@ function drawContour(d3Container, contourData, transform, force=null) {
                 context.translate(cachedTransform.x, cachedTransform.y);
             }
             context.lineWidth = 1;
-            context.strokeStyle = 'grey';
+            context.strokeStyle = '#aaa';
             context.beginPath();
             // draw minor ticks
             cachedGrid.rows.filter(row => !row.isMajor).forEach(row => {
@@ -932,7 +932,7 @@ function drawContour(d3Container, contourData, transform, force=null) {
             context.stroke();
             // draw major ticks
             context.lineWidth = 2;
-            context.strokeStyle = 'black';
+            context.strokeStyle = '#888';
             context.beginPath();
             cachedGrid.rows.filter(row => row.isMajor).forEach(row => {
                 context.moveTo(row.lo.x - 10, row.lo.y);
