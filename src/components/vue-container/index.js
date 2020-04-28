@@ -1,7 +1,7 @@
 import angular from 'angular';
 import Vue from 'vue/dist/vue.min.js';
 import {Plugin} from 'vue-fragment';
-const moduleName = "vueContainer";
+const moduleName = "containerVue";
 export default moduleName;
 
 Vue.use(Plugin);

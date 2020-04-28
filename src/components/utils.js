@@ -9,9 +9,9 @@ const makeAngularModule = function(moduleName, template, propList) {
         .module(moduleName, [vueContainer])
         .component(moduleName, {
             template: `
-                <vue-container vue-data='ngVue.vueData' vue-methods='ngVue.vueMethods'>
+                <container-vue vue-data='ngVue.vueData' vue-methods='ngVue.vueMethods'>
                     ${template}
-                </vue-container>
+                </container-vue>
             `,
             controller: ['$scope', Controller],
             controllerAs: 'ngVue',
