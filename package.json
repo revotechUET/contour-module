@@ -27,7 +27,10 @@
     "prod:vue": "export BUILD_ENV=prod && webpack --config webpack.conf.js",
     "dev:angular": "export BUILD_ENV=dev && export BUILD_TARGET=angular && webpack-dev-server --color --config webpack.conf.js",
     "dev:angular:build": "export BUILD_ENV=dev && export BUILD_TARGET=angular && webpack --config webpack.conf.js",
-    "prod:angular": "export BUILD_ENV=prod && export BUILD_TARGET=angular && webpack --config webpack.conf.js"
+    "prod:angular": "export BUILD_ENV=prod && export BUILD_TARGET=angular && webpack --config webpack.conf.js",
+    "win:dev:angular": "set BUILD_ENV=dev && set BUILD_TARGET=angular && webpack-dev-server --color --config webpack.conf.js",
+    "win:prod:angular": "set BUILD_ENV=prod && set BUILD_TARGET=angular && webpack --config webpack.conf.js",
+    "win:dev:angular:build": "set BUILD_ENV=dev && set BUILD_TARGET=angular && webpack --config webpack.conf.js"
   },
   "author": "",
   "license": "ISC",

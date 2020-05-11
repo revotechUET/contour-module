@@ -152,6 +152,14 @@ angular
             rootCtrl.rulerDistance = distance;
             $timeout(() => $scope.$digest())
         }
+        let toZmapFile = () => {};
+        this.onFileImportMounted = function(fileImport) {
+            toZmapFile = fileImport.toZmapFile;
+        }
+
+        this.exportToZmap = function() {
+            console.log(toZmapFile());
+        }
         this.onDataChanged = function(changedData) {
             // console.log('on data changed');
             // console.log(changedData);

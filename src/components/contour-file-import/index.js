@@ -1,17 +1,24 @@
 import Vue from "vue/dist/vue.min.js";
 import template from "./template.html";
-import { parseZmapGrid } from "./parser";
+import { parseZmapGrid, toZmapFile } from "./parser";
 const componentName = "contour-file-import";
 const component = {
     props: {
         'onDataChanged': Function,
         'negativeData': Boolean,
+        'onComponentMounted': Function
     },
     data: () => ({
         headers: {},
         data: [],
     }),
     template,
+    mounted() {
+        this.$nextTick(() => {
+            if (typeof(this.onComponentMounted) == 'function')
+                this.onComponentMounted(this);
+        })
+    },
     methods: {
         onFileChange: function(event) {
             if (!event.target.files[0]) return;
@@ -40,6 +47,9 @@ const component = {
                 headers: this.headers,
                 data: _data
             });
+        },
+        toZmapFile: function() {
+            return toZmapFile(this.headers, this.data);
         }
     },
     watch: {

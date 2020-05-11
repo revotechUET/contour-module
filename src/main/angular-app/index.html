@@ -47,6 +47,7 @@
             </div>
             <button ng-click="rootCtrl.makeCenter()">Center map</button>
             <contour-file-import
+                on-component-mounted-get="rootCtrl.getter('onFileImportMounted')"
                 negative-data-get="rootCtrl.getter('negativeData')"
                 on-data-changed-get="rootCtrl.getter('onDataChanged')">
             </contour-file-import>
@@ -57,6 +58,7 @@
                 max-val-get="rootCtrl.getter('maxValue')">
             </color-scale-generator>
             <div>
+                <button ng-click="rootCtrl.exportToZmap()">toZmapFile</button>
                 <label>Mouse Coord</label>
                 {{rootCtrl.mouseCoord.x}} - {{rootCtrl.mouseCoord.y}}
                 <div>mouseValue: {{rootCtrl.mouseValue}} (m)</div>

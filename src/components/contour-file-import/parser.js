@@ -1,5 +1,5 @@
 import _ from "lodash";
-export {parseZmapGrid};
+export {parseZmapGrid, toZmapFile};
 
 /**
  * parse zmap grid file
@@ -122,4 +122,40 @@ function matchNullValue(v, nullValue) {
     const _value = Number(v);
     if (_value == nullValue) return null;
     return _value;
+}
+
+function toZmapFile(headers, data) {
+    const {
+        gridNodesPerPhysicalLine,
+        nodeWidth, numNullValue, textNullValue, numOfDecimal, startCol,
+        numOfRows, numOfCols, minX, maxX, minY, maxY,
+        rotationAngle, xDirection, yDirection, ...other
+    } = headers;
+    let content =
+`
+@Grid HEADER, GRID, ${gridNodesPerPhysicalLine}
+${nodeWidth}, ${numNullValue}, ${textNullValue}, ${numOfDecimal}, ${startCol}
+${numOfRows}, ${numOfCols}, ${minX}, ${maxX}, ${minY}, ${maxY}
+${rotationAngle}, ${yDirection}, ${xDirection}
+@
+`
+    const transposedData = _.zip.apply(_, data);
+    transposedData.forEach(row => {
+        let rowContent = "";
+        row.forEach((cell, cellIndex) => {
+            if (cell == null)
+                content += _.padStart(numNullValue.toFixed(numOfDecimal), nodeWidth, " ").substr(0, nodeWidth);
+            else
+                content += _.padStart(cell.toFixed(numOfDecimal), nodeWidth, " ").substr(0, nodeWidth);
+
+            if ((cellIndex+1) % gridNodesPerPhysicalLine == 0)
+                content += "\n";
+        })
+        if (rowContent.charCodeAt(rowContent.length - 1) != 10)
+            rowContent += "\n";
+        content += rowContent;
+    });
+
+    console.log(content);
+    return content;
 }
