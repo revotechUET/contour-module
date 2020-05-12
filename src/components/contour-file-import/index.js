@@ -20,12 +20,19 @@ const component = {
         })
     },
     methods: {
+        doParseFromContent: function(content) {
+            const parsedData = parseZmapGrid(content);
+            this.exposeData(parsedData.headers, parsedData.data);
+        },
         onFileChange: function(event) {
             if (!event.target.files[0]) return;
             const reader = new FileReader();
             reader.onload = e => {
+                this.doParseFromContent(e.target.result);
+                /*
                 const parsedData = parseZmapGrid(e.target.result);
                 this.exposeData(parsedData.headers, parsedData.data);
+                */
             }
             reader.readAsText(event.target.files[0]);
         },
