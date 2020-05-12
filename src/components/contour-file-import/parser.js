@@ -155,7 +155,5 @@ ${rotationAngle}, ${yDirection}, ${xDirection}
             rowContent += "\n";
         content += rowContent;
     });
-
-    console.log(content);
     return content;
 }
