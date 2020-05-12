@@ -55,8 +55,8 @@ const component = {
                 data: _data
             });
         },
-        toZmapFile: function() {
-            return toZmapFile(this.headers, this.data);
+        toZmapFile: function(headers, data) {
+            return toZmapFile(headers || this.headers, data || this.data);
         }
     },
     watch: {
