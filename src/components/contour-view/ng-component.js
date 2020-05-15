@@ -19,6 +19,7 @@ const template = `
         :show-grid="showGrid" :grid-major="gridMajor" :grid-minor="gridMinor"
         :grid-nice="gridNice" :y-direction="yDirection"
         :show-scale='showScale' :wells='wells' :show-well='showWell'
+        :well-icon-size="wellIconSize"
         :show-trajectory='showTrajectory' :trajectories='trajectories'
         :show-label="showLabel" :label-font-size="labelFontSize"
         :show-color-scale-legend="showColorScaleLegend" :color-legend-ticks="colorLegendTicks"

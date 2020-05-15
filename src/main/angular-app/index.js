@@ -26,6 +26,7 @@ angular
         this.gridMinor = 4;
         this.gridNice = true;
         this.scale = 1;
+        this.wellIconSize = 1;
         this.mouseCoord = {x: null, y: null};
         this.rulerDistance = null;
         this.yDirection = 'up';

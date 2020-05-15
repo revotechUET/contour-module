@@ -34,6 +34,7 @@
                 y-direction-get="rootCtrl.getter('yDirection')"
                 wells-get="rootCtrl.getter('wells')"
                 show-well-get="rootCtrl.getter('showWell')"
+                well-icon-size-get="rootCtrl.getter('wellIconSize')"
                 trajectories-get="rootCtrl.getter('trajectories')"
                 show-trajectory-get="rootCtrl.getter('showTrajectory')"
                 disable-zoom-get="rootCtrl.getter('disableZoom')"
@@ -84,6 +85,7 @@
                 <br/>
                 <label>Show Well</label>
                 <input type="checkbox" ng-model="rootCtrl.showWell"/>
+                <input type="number" ng-model="rootCtrl.wellIconSize"/>
                 <button ng-click="rootCtrl.addRandomWell()">Add Well</button>
                 <button ng-click="rootCtrl.removeRandomWell()">Remove Well</button>
                 <button ng-click="rootCtrl.changeRandomWell()">Change Well</button>

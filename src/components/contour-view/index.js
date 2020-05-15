@@ -14,7 +14,7 @@ const component = {
         "showGrid", "gridMajor", "gridMinor", "gridNice",
         "minX", "maxX", "minY", "maxY",
         'onScaleChanged', 'yDirection', "showScale",
-        'wells', "showWell",
+        'wells', "showWell", "wellIconSize",
         'trajectories', 'showTrajectory',
         "showColorScaleLegend", 'colorLegendTicks',
         "negativeData", "showLabel", "labelInterval",
@@ -122,6 +122,10 @@ const component = {
         showWell: function(val) {
             // console.log("vue - showWells changed");
             updateContourDataDebounced(this.$refs.drawContainer, this.dataFn);
+        },
+        wellIconSize: function(val) {
+            // console.log("vue - wellIconSize changed");
+            updateContourDataDebounced(this.$refs.drawContainer, this.dataFn, 'well');
         },
         trajectories: {
             handler: function(val) {
@@ -282,6 +286,7 @@ const component = {
                 yDirection: this.yDirection,
                 showScale: this.showScale,
                 showWell: this.showWell,
+                wellIconSize: this.wellIconSize,
                 showTrajectory: this.showTrajectory,
                 centerCoordinate: this.centerCoordinate,
                 scale: this.scale,
@@ -498,6 +503,7 @@ function updateContourData(container, dataFn, forceDrawTarget=null) {
         showScale: data.showScale,
         showTrajectory: data.showTrajectory,
         showWell: data.showWell,
+        wellIconSize: data.wellIconSize,
         labelFontSize: data.labelFontSize,
         labelInterval: data.labelInterval,
         colorScale: data.colorScale,
@@ -1146,8 +1152,9 @@ function drawContour(d3Container, contourData, transform, force=null) {
                 const icon = SUPPORTED_ICONS[wellPos.well.icon || 'well'];
                 context.fillStyle = wellPos.well.color || 'black';
                 context.save();
-                context.translate(wellPos.x - icon.offsetX,  wellPos.y - icon.offsetY);
-                context.scale(icon.scale, icon.scale);
+                const iconSize = cachedContourData.wellIconSize || 1;
+                context.translate(wellPos.x - icon.offsetX * iconSize,  wellPos.y - icon.offsetY * iconSize);
+                context.scale(icon.scale * iconSize, icon.scale * iconSize);
                 const path = new Path2D(icon.path);
                 context.fill(path);
                 context.closePath();
