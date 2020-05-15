@@ -1164,7 +1164,7 @@ function drawContour(d3Container, contourData, transform, force=null) {
                 let popupPos = wellPos.popupPos || wellPos;
                 if (popupPos == wellPos) {
                     popupPos = _.clone(wellPos);
-                    popupPos.y -= icon.offsetY;
+                    popupPos.y -= icon.offsetY * iconSize;
                 }
                 const drawContent = _.get(wellPos, 'well.displayContent', wellPos.well.name);
                 const textWidth = context.measureText(drawContent).width;
