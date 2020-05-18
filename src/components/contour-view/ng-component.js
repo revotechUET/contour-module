@@ -31,6 +31,7 @@ const template = `
         :negative-data="negativeData"
         :label-interval="labelInterval"
         :on-component-mounted="onComponentMounted"
+        :on-map-center-changed="onMapCenterChanged"
         :on-scale-changed="onScaleChanged">
     </contour-view>
 `;

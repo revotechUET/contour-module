@@ -20,7 +20,7 @@ const component = {
         "negativeData", "showLabel", "labelInterval",
         'onComponentMounted', "onMouseMove", "disableZoom",
         "disableMouseCoordinate", "enableRulerMode",
-        'onRulerEnd'
+        'onRulerEnd', "onMapCenterChanged"
     ],
     template,
     mounted() {
@@ -275,6 +275,7 @@ const component = {
                 labelInterval: this.labelInterval,
                 colorScale: this.colorScale,
                 onScaleChanged: this.onScaleChanged,
+                onMapCenterChanged: this.onMapCenterChanged,
                 onMouseMove: this.onMouseMove,
                 onRulerEnd: this.onRulerEnd,
                 xInc: this.incXDirection || 50,
@@ -304,13 +305,13 @@ function initContour(container, dataFn) {
     const containerWidth = d3Container.node().offsetWidth;
     const containerHeight = d3Container.node().offsetHeight;
     const d3Canvas = d3Container.append("canvas")
-        // .style('background-color', 'black')
         .attr('class', 'draw-layer')
         .attr("width", containerWidth || 500)
         .attr("height", containerHeight || 500);
 
     const zoomBehavior = d3.zoom()
-            .on("zoom", () => onCanvasZoom(d3Container, dataFn().onScaleChanged));
+            .on("zoom", () => onCanvasZoom(d3Container, dataFn().onScaleChanged, dataFn().onMapCenterChanged))
+            .on("end", () => { onCanvasZoomEnd(d3Container); });
     d3Canvas.call(zoomBehavior);
 
     d3Canvas.on('mousemove', function() {
@@ -433,10 +434,35 @@ function onDragEnd(mouseX, mouseY, d3Canvas, d3Container, onDragEndFn) {
     onDragEndFn && onDragEndFn(getDistance(start, end));
 }
 
-function onCanvasZoom(d3Container, onScaleChanged) {
+let lastTransform = null;
+function onCanvasZoom(d3Container, onScaleChanged, onMapCenterChanged) {
     const transform = _.clone(d3.event.transform);
+
+    if (!lastTransform)
+        lastTransform = _.clone(transform);
+    let deltaX = transform.x - lastTransform.x;
+    let deltaY = transform.y - lastTransform.y;
+    lastTransform = _.clone(transform);
+    const canvasEle = d3Container.select('canvas.draw-layer').node();
+    const __gridToCoordinate = canvasEle.__gridToCoordinate;
+    const __nodeToPixelX = canvasEle.__nodeToPixelX;
+    const __nodeToPixelY = canvasEle.__nodeToPixelY;
+    const coord = __gridToCoordinate({
+        x: __nodeToPixelX.invert(deltaX),
+        y: __nodeToPixelY.invert(deltaY)
+    })
+    const zeroCoord = __gridToCoordinate({x: 0, y: 0});
+    const deltaXCoord = coord.x - zeroCoord.x;
+    const deltaYCoord = coord.y - zeroCoord.y;
+    console.log(deltaXCoord, deltaYCoord);
+    onMapCenterChanged && onMapCenterChanged(deltaXCoord, deltaYCoord);
+
     onScaleChanged && onScaleChanged(transform.k);
     updateCanvasTransformDebounced(d3Container, transform);
+}
+
+function onCanvasZoomEnd(d3Container) {
+    console.log("transform end: ", d3.event.transform, d3Container.select('canvas.draw-layer'));
 }
 
 const updateCanvasTransformDebounced = _.throttle(updateCanvasTransform, 20);
