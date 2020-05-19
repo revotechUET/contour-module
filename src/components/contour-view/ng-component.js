@@ -31,6 +31,8 @@ const template = `
         :negative-data="negativeData"
         :label-interval="labelInterval"
         :on-component-mounted="onComponentMounted"
+        :show-Utm-zones="showUtmZones"
+        :utm-zones="utmZones"
         :on-scale-changed="onScaleChanged">
     </contour-view>
 `;

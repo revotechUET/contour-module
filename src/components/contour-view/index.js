@@ -20,6 +20,7 @@ const component = {
         "negativeData", "showLabel", "labelInterval",
         'onComponentMounted', "onMouseMove", "disableZoom",
         "disableMouseCoordinate", "enableRulerMode",
+        "showUtmZones", "utmZones",
         'onRulerEnd'
     ],
     template,
@@ -160,7 +161,15 @@ const component = {
         },
         enableRulerMode: function() {
             this.onEnableRulerModeChanged();
-        }
+        },
+        showUtmZones: function(){
+            console.log("vue - showUtmZones changed");
+            updateContourDataDebounced(this.$refs.drawContainer, this.dataFn, 'zone-line');
+        },
+        utmZones: function(){
+            console.log("vue - utmZones changed");
+            updateContourDataDebounced(this.$refs.drawContainer, this.dataFn, 'zone-line');
+        },
         /*
         negativeData: function(val) {
             console.log("vue - negativeData changed");
@@ -291,6 +300,8 @@ const component = {
                 centerCoordinate: this.centerCoordinate,
                 scale: this.scale,
                 contourUnit: this.contourUnit,
+                showUtmZones: this.showUtmZones,
+                utmZones: this.utmZones
             }
         }
     }
@@ -530,6 +541,8 @@ function updateContourData(container, dataFn, forceDrawTarget=null) {
         },
         values: data.values, // for draw color legend
         contourUnit: data.contourUnit,
+        showUtmZones: data.showUtmZones,
+        utmZones: data.utmZones
     })
 
     // temporary save transform
@@ -854,15 +867,50 @@ function getColorLegendData (contourData, transform) {
     return legend;
 }
 
+function getUTMZoneLines(contourData, transform) {
+    const nodeXToPixel = contourData.grid.nodeXToPixel;
+    const nodeYToPixel = contourData.grid.nodeYToPixel;
+    const zoomedScale = transform ? transform.k : 1;
+    const nodeCellToZoneCoordinate = contourData.grid.nodeToCoordinate;
+    const UTMZones = contourData.utmZones;
+    const equator = contourData.utmZones.equator;
+    const lines = [];
+    // equator
+    const equatorStartNodeCell = nodeCellToZoneCoordinate.invert(equator.start);
+    const equatorEndNodeCell = nodeCellToZoneCoordinate.invert(equator.end);
+    lines.equator = {
+        start: {x: nodeXToPixel(equatorStartNodeCell.x) * zoomedScale, y: nodeYToPixel(equatorStartNodeCell.y) * zoomedScale},
+        end: {x: nodeXToPixel(equatorEndNodeCell.x) * zoomedScale, y: nodeYToPixel(equatorEndNodeCell.y) * zoomedScale},
+        label: equator.label
+    }
+    for (const zone of UTMZones) {
+        const startPoint = zone.start;
+        const startNodeCell = nodeCellToZoneCoordinate.invert(startPoint);
+        const endPoint = zone.end;
+        const endNodeCell = nodeCellToZoneCoordinate.invert(endPoint);
+
+        const startPixelX = nodeXToPixel(startNodeCell.x) * zoomedScale;
+        const startPixelY = nodeYToPixel(startNodeCell.y) * zoomedScale;
+        const endPixelX = nodeXToPixel(endNodeCell.x) * zoomedScale;
+        const endPixelY = nodeYToPixel(endNodeCell.y) * zoomedScale;
+        lines.push({
+            start: {x: startPixelX, y: startPixelY},
+            end: {x: endPixelX, y: endPixelY},
+            label: zone.label
+        })
+    }
+    return lines;
+}
+
 let cachedPath2Ds = [];
 let cachedContourData = [];
 let cachedWellsPosition = [];
 let cachedTrajectoriesPosition = [];
 let cachedTransform = null;
 let cachedGrid = null;
-let cachedAxes = null;
 let cachedScalePosition = null;
 let cachedColorLegendData = null;
+let cachedUTMZones = [];
 function drawContour(d3Container, contourData, transform, force=null) {
     const d3Canvas = d3Container.select('canvas.draw-layer');
     const context = d3Canvas.node().getContext("2d");
@@ -900,6 +948,10 @@ function drawContour(d3Container, contourData, transform, force=null) {
         ? getColorLegendData(cachedContourData, cachedTransform)
         : cachedColorLegendData;
 
+    cachedUTMZones = (scaleChanged || force=="all" || force=="zone-line")
+        ? getUTMZoneLines(cachedContourData, cachedTransform)
+        : cachedUTMZones;
+
     // editing props
     cachedPath2Ds.showLabel = cachedContourData.showLabel;
     cachedPath2Ds.labelFontSize = cachedContourData.labelFontSize;
@@ -914,10 +966,50 @@ function drawContour(d3Container, contourData, transform, force=null) {
         });
     })
 
+    //draw UTM Zones
+    if (cachedContourData.showUtmZones) {
+        requestAnimationFrame(() => {
+            context.clearRect(0, 0, d3Canvas.attr("width"), d3Canvas.attr("height"));
+            context.save();
+            if (cachedTransform) {
+                context.translate(cachedTransform.x, cachedTransform.y);
+            }
+
+            context.strokeStyle = '#000';
+            context.fillStyle = '#000';
+            context.lineWidth = 1;
+            context.font = "16px sans-serif";
+
+            // draw equator line
+            const e_start = cachedUTMZones.equator.start;
+            const e_end = cachedUTMZones.equator.end;
+            context.beginPath();
+            context.moveTo(e_start.x, e_start.y)
+            context.lineTo(e_end.x, e_end.y);
+            context.fillText(cachedUTMZones.equator.label, (e_start.x + e_end.x) / 2, (e_start.y + e_end.y) / 2);
+
+            cachedUTMZones.forEach(zoneLine => {
+                const zl_start = zoneLine.start;
+                const zl_end = zoneLine.end;
+                context.moveTo(zl_start.x, zl_start.y);
+                context.lineTo(zl_end.x, zl_end.y);
+                context.fillText(zoneLine.label, (zl_start.x + zl_end.x) / 2, (zl_start.y + zl_end.y) / 2);
+            })
+            context.stroke();
+
+
+            context.restore();
+        })
+    } else {
+        requestAnimationFrame(() => {
+            context.clearRect(0, 0, d3Canvas.attr("width"), d3Canvas.attr("height"));
+        })
+    }
+
     //draw grid
     if (cachedContourData.grid.show && cachedGrid) {
         requestAnimationFrame(() => {
-            context.clearRect(0, 0, d3Canvas.attr("width"), d3Canvas.attr("height"));
+            // context.clearRect(0, 0, d3Canvas.attr("width"), d3Canvas.attr("height"));
             context.save();
             if (cachedTransform) {
                 context.translate(cachedTransform.x, cachedTransform.y);
@@ -952,10 +1044,10 @@ function drawContour(d3Container, contourData, transform, force=null) {
             context.stroke();
             context.restore();
         })
-    } else {
-        requestAnimationFrame(() => {
-            context.clearRect(0, 0, d3Canvas.attr("width"), d3Canvas.attr("height"));
-        })
+    // } else {
+    //     requestAnimationFrame(() => {
+    //         context.clearRect(0, 0, d3Canvas.attr("width"), d3Canvas.attr("height"));
+    //     })
     }
 
     // draw contour paths
