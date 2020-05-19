@@ -440,8 +440,8 @@ function onCanvasZoom(d3Container, onScaleChanged, onMapCenterChanged) {
 
     if (!lastTransform)
         lastTransform = _.clone(transform);
-    let deltaX = transform.x - lastTransform.x;
-    let deltaY = transform.y - lastTransform.y;
+    let deltaX = (transform.x - lastTransform.x) / transform.k;
+    let deltaY = (transform.y - lastTransform.y) / transform.k;
     lastTransform = _.clone(transform);
     const canvasEle = d3Container.select('canvas.draw-layer').node();
     const __gridToCoordinate = canvasEle.__gridToCoordinate;
@@ -454,7 +454,7 @@ function onCanvasZoom(d3Container, onScaleChanged, onMapCenterChanged) {
     const zeroCoord = __gridToCoordinate({x: 0, y: 0});
     const deltaXCoord = coord.x - zeroCoord.x;
     const deltaYCoord = coord.y - zeroCoord.y;
-    console.log(deltaXCoord, deltaYCoord);
+    // console.log(deltaXCoord, deltaYCoord);
     onMapCenterChanged && onMapCenterChanged(deltaXCoord, deltaYCoord);
 
     onScaleChanged && onScaleChanged(transform.k);
