@@ -321,6 +321,7 @@ function initContour(container, dataFn) {
         .attr("height", containerHeight || 500);
 
     const zoomBehavior = d3.zoom()
+            .scaleExtent([0.005, 2000000])
             .on("zoom", () => onCanvasZoom(d3Container, dataFn().onScaleChanged));
     d3Canvas.call(zoomBehavior);
 
@@ -673,6 +674,7 @@ function getScalePosition(contourData, transform, d3Canvas) {
     const nodeCellToZoneCoordinate = contourData.grid.nodeToCoordinate;
 
     let step = Math.pow(10, Math.floor(Math.log10(zoomedScale % 10 || 0.01)));
+    if (step < 0.001) { step = 0.001; }
 
     // get scale indicator for x dimension
     let cellUnit = step;
@@ -873,16 +875,7 @@ function getUTMZoneLines(contourData, transform) {
     const zoomedScale = transform ? transform.k : 1;
     const nodeCellToZoneCoordinate = contourData.grid.nodeToCoordinate;
     const UTMZones = contourData.utmZones;
-    const equator = contourData.utmZones.equator;
     const lines = [];
-    // equator
-    const equatorStartNodeCell = nodeCellToZoneCoordinate.invert(equator.start);
-    const equatorEndNodeCell = nodeCellToZoneCoordinate.invert(equator.end);
-    lines.equator = {
-        start: {x: nodeXToPixel(equatorStartNodeCell.x) * zoomedScale, y: nodeYToPixel(equatorStartNodeCell.y) * zoomedScale},
-        end: {x: nodeXToPixel(equatorEndNodeCell.x) * zoomedScale, y: nodeYToPixel(equatorEndNodeCell.y) * zoomedScale},
-        label: equator.label
-    }
     for (const zone of UTMZones) {
         const startPoint = zone.start;
         const startNodeCell = nodeCellToZoneCoordinate.invert(startPoint);
@@ -975,28 +968,21 @@ function drawContour(d3Container, contourData, transform, force=null) {
                 context.translate(cachedTransform.x, cachedTransform.y);
             }
 
-            context.strokeStyle = '#000';
+            context.strokeStyle = '#444';
             context.fillStyle = '#000';
             context.lineWidth = 1;
             context.font = "16px sans-serif";
+            context.textAlign = "center";
 
-            // draw equator line
-            const e_start = cachedUTMZones.equator.start;
-            const e_end = cachedUTMZones.equator.end;
-            context.beginPath();
-            context.moveTo(e_start.x, e_start.y)
-            context.lineTo(e_end.x, e_end.y);
-            context.fillText(cachedUTMZones.equator.label, (e_start.x + e_end.x) / 2, (e_start.y + e_end.y) / 2);
-
-            cachedUTMZones.forEach(zoneLine => {
+            cachedUTMZones.forEach((zoneLine, index) => {
                 const zl_start = zoneLine.start;
                 const zl_end = zoneLine.end;
                 context.moveTo(zl_start.x, zl_start.y);
                 context.lineTo(zl_end.x, zl_end.y);
-                context.fillText(zoneLine.label, (zl_start.x + zl_end.x) / 2, (zl_start.y + zl_end.y) / 2);
+                const middleX = (zl_start.x + zl_end.x) / 2;
+                context.fillText(zoneLine.label, middleX, (zl_start.y + zl_end.y) / 2);
             })
             context.stroke();
-
 
             context.restore();
         })
