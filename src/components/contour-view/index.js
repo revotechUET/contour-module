@@ -23,7 +23,8 @@ const component = {
         "showUtmZones", "utmZones",
         'onRulerEnd',
         "drawWidth", "drawHeight",
-        "onDrawFinished"
+        "onDrawFinished",
+        "fitContainer"
     ],
     template,
     mounted() {
@@ -34,8 +35,14 @@ const component = {
         })
     },
     watch: {
+        fitContainer() {
+            if (this.fitContainer)
+                this.__contour.d3Canvas.on('.zoom', null)
+            else
+                this.__contour.d3Canvas.call(this.__contour.zoomBehavior);
+        },
         drawWidth: function(val) {
-            // console.log("vue - draw width changed");
+            // console.log("vue - draw height changed");
             updateCanvasOnResizeDebounced(this.__contour.d3Container, this.__contour.d3Canvas, this.drawWidth, this.drawHeight);
         },
         drawHeight: function(val) {
@@ -314,7 +321,8 @@ const component = {
                 utmZones: this.utmZones,
                 drawWidth: this.drawWidth,
                 drawHeight: this.drawHeight,
-                onDrawFinished: this.onDrawFinished
+                onDrawFinished: this.onDrawFinished,
+                fitContainer: this.fitContainer
             }
         }
     }
@@ -336,7 +344,8 @@ function initContour(container, dataFn) {
     const zoomBehavior = d3.zoom()
             .scaleExtent([0.005, 2000000])
             .on("zoom", () => onCanvasZoom(d3Container, dataFn().onScaleChanged));
-    d3Canvas.call(zoomBehavior);
+    if (dataFn().fitContainer)
+        d3Canvas.call(zoomBehavior);
 
     d3Canvas.on('mousemove', function() {
         const mouse = d3.mouse(this);
@@ -559,7 +568,8 @@ function updateContourData(container, dataFn, forceDrawTarget=null) {
         contourUnit: data.contourUnit,
         showUtmZones: data.showUtmZones,
         utmZones: data.utmZones,
-        onDrawFinished: data.onDrawFinished
+        onDrawFinished: data.onDrawFinished,
+        fitContainer: data.fitContainer
     })
 
     // temporary save transform
@@ -923,14 +933,22 @@ let cachedUTMZones = [];
 function drawContour(d3Container, contourData, transform, force=null) {
     const d3Canvas = d3Container.select('canvas.draw-layer');
     const context = d3Canvas.node().getContext("2d");
-
     const scaleChanged = (transform && cachedTransform && transform.k != cachedTransform.k)
         ? true:(cachedTransform ? false:true);
 
     cachedTransform = transform || cachedTransform;
     cachedContourData = contourData || cachedContourData;
-
+    
     if (!cachedContourData.grid) return;
+
+    if (cachedContourData.fitContainer) {
+        cachedContourData.grid.nodeXToPixel.domain([0, cachedContourData.grid.width]).range([0, d3Canvas.attr('width')]);
+        cachedContourData.grid.nodeYToPixel.domain([0, cachedContourData.grid.height]).range([0, d3Canvas.attr('height')]);
+    } else {
+        cachedContourData.grid.nodeXToPixel.domain([0, 1]).range([0, 1]);
+        cachedContourData.grid.nodeYToPixel.domain([0, 1]).range([0, 1]);
+    }
+
 
     const gridNodeXtoPixel = cachedContourData.grid.nodeXToPixel;
     const gridNodeYtoPixel = cachedContourData.grid.nodeYToPixel;
