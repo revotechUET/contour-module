@@ -1,17 +1,18 @@
 <fragment>
-    <div style="width: 90vw;">
-    <contour-view
-        :values="values" :n-rows="headers.numOfCols" :n-cols="headers.numOfRows"
-        :min-x="headers.minX" :max-x="headers.maxX"
-        :min-y="headers.minY" :max-y="headers.maxY"
-        :x-inc="headers.xDirection" :y-inc="headers.yDirection"
-        :color-scale="colorScale" :step="step" :major-every="majorEvery"
-        :show-grid="showGrid" :grid-major="gridMajor" :grid-minor="gridMinor" :grid-nice="gridNice"
-        :y-direction="yDirection" :show-scale="showScale"
-        :show-color-scale-legend="showColorScaleLegend" :color-legend-ticks="colorLegendTicks"
-        :negative-data="negativeData"
-        :show-label="showLabel" :label-font-size="fontSize" :on-scale-changed="(_scl) => scale = _scl">
-    </contour-view>
+    <div style="width: 90vw; position: relative;">
+        <contour-view
+            :values="values" :n-rows="headers.numOfCols" :n-cols="headers.numOfRows"
+            :min-x="headers.minX" :max-x="headers.maxX"
+            :min-y="headers.minY" :max-y="headers.maxY"
+            :x-inc="headers.xDirection" :y-inc="headers.yDirection"
+            :color-scale="colorScale" :step="step" :major-every="majorEvery"
+            :show-grid="showGrid" :grid-major="gridMajor" :grid-minor="gridMinor" :grid-nice="gridNice"
+            :y-direction="yDirection" :show-scale="showScale"
+            :show-color-scale-legend="showColorScaleLegend" :color-legend-ticks="colorLegendTicks"
+            :negative-data="negativeData"
+            :draw-width="500" :draw-height="500"
+            :show-label="showLabel" :label-font-size="fontSize" :on-scale-changed="(_scl) => scale = _scl">
+        </contour-view>
     </div>
     <contour-file-import
         :negative-data="negativeData"

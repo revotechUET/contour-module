@@ -21,7 +21,9 @@ const component = {
         'onComponentMounted', "onMouseMove", "disableZoom",
         "disableMouseCoordinate", "enableRulerMode",
         "showUtmZones", "utmZones",
-        'onRulerEnd'
+        'onRulerEnd',
+        "drawWidth", "drawHeight",
+        "onDrawFinished"
     ],
     template,
     mounted() {
@@ -32,6 +34,14 @@ const component = {
         })
     },
     watch: {
+        drawWidth: function(val) {
+            // console.log("vue - draw width changed");
+            updateCanvasOnResizeDebounced(this.__contour.d3Container, this.__contour.d3Canvas, this.drawWidth, this.drawHeight);
+        },
+        drawHeight: function(val) {
+            // console.log("vue - draw height changed");
+            updateCanvasOnResizeDebounced(this.__contour.d3Container, this.__contour.d3Canvas, this.drawWidth, this.drawHeight);
+        },
         values: {
             handler: function(val) {
                 // console.log("vue - values changed");
@@ -301,7 +311,10 @@ const component = {
                 scale: this.scale,
                 contourUnit: this.contourUnit,
                 showUtmZones: this.showUtmZones,
-                utmZones: this.utmZones
+                utmZones: this.utmZones,
+                drawWidth: this.drawWidth,
+                drawHeight: this.drawHeight,
+                onDrawFinished: this.onDrawFinished
             }
         }
     }
@@ -312,13 +325,13 @@ export default component;
 // FUNCTIONS DEFINITIONS
 function initContour(container, dataFn) {
     const d3Container = d3.select(container);
-    const containerWidth = d3Container.node().offsetWidth;
-    const containerHeight = d3Container.node().offsetHeight;
+    const containerWidth = dataFn().drawWidth || d3Container.node().offsetWidth || 500;
+    const containerHeight = dataFn().drawHeight || d3Container.node().offsetHeight || 500;
     const d3Canvas = d3Container.append("canvas")
         // .style('background-color', 'black')
         .attr('class', 'draw-layer')
-        .attr("width", containerWidth || 500)
-        .attr("height", containerHeight || 500);
+        .attr("width", containerWidth)
+        .attr("height", containerHeight);
 
     const zoomBehavior = d3.zoom()
             .scaleExtent([0.005, 2000000])
@@ -331,21 +344,23 @@ function initContour(container, dataFn) {
         onMouseMoveDebounced(mouse[0], mouse[1], d3Canvas, dataFn().onMouseMove);
     })
 
-    window.addEventListener("resize", _.debounce(() => updateCanvasOnResize(d3Container, d3Canvas), 200));
+    window.addEventListener("resize", _.debounce(() => updateCanvasOnResize(d3Container, d3Canvas, containerWidth, containerHeight), 200));
 
-    return { d3Canvas, zoomBehavior };
+    return { d3Canvas, zoomBehavior, d3Container };
 }
 
-function updateCanvasOnResize(d3Container, d3Canvas) {
-    const containerWidth = d3Container.node().offsetWidth;
-    const containerHeight = d3Container.node().offsetHeight;
+const updateCanvasOnResizeDebounced = _.debounce(updateCanvasOnResize)
+function updateCanvasOnResize(d3Container, d3Canvas, width = null, height = null) {
+    const containerWidth = width || d3Container.node().offsetWidth;
+    const containerHeight = height || d3Container.node().offsetHeight;
+
     d3Canvas
         .attr("width", containerWidth || 500)
         .attr("height", containerHeight || 500);
     d3Container.selectAll('canvas.ruler-layer')
         .attr("width", containerWidth || 500)
         .attr("height", containerHeight || 500);
-
+    
     drawContour(d3Container);
 }
 
@@ -543,7 +558,8 @@ function updateContourData(container, dataFn, forceDrawTarget=null) {
         values: data.values, // for draw color legend
         contourUnit: data.contourUnit,
         showUtmZones: data.showUtmZones,
-        utmZones: data.utmZones
+        utmZones: data.utmZones,
+        onDrawFinished: data.onDrawFinished
     })
 
     // temporary save transform
@@ -874,7 +890,7 @@ function getUTMZoneLines(contourData, transform) {
     const nodeYToPixel = contourData.grid.nodeYToPixel;
     const zoomedScale = transform ? transform.k : 1;
     const nodeCellToZoneCoordinate = contourData.grid.nodeToCoordinate;
-    const UTMZones = contourData.utmZones;
+    const UTMZones = contourData.utmZones || [];
     const lines = [];
     for (const zone of UTMZones) {
         const startPoint = zone.start;
@@ -1334,6 +1350,11 @@ function drawContour(d3Container, contourData, transform, force=null) {
             context.restore();
         })
     }
+
+    if (cachedContourData.onDrawFinished)
+        requestAnimationFrame(() => {
+            cachedContourData.onDrawFinished && cachedContourData.onDrawFinished();
+        })
 
     // draw north sign
     /* USING LATER WHEN SUPPORT FOR MAP ROTATION
