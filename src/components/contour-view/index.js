@@ -343,8 +343,10 @@ function initContour(container, dataFn) {
 
     const zoomBehavior = d3.zoom()
             .scaleExtent([0.005, 2000000])
-            .on("zoom", () => onCanvasZoom(d3Container, dataFn().onScaleChanged));
-    if (dataFn().fitContainer)
+            .on("zoom", () => {
+                onCanvasZoom(d3Container, dataFn().onScaleChanged);
+            });
+    if (!dataFn().fitContainer)
         d3Canvas.call(zoomBehavior);
 
     d3Canvas.on('mousemove', function() {
@@ -944,6 +946,9 @@ function drawContour(d3Container, contourData, transform, force=null) {
     if (cachedContourData.fitContainer) {
         cachedContourData.grid.nodeXToPixel.domain([0, cachedContourData.grid.width]).range([0, d3Canvas.attr('width')]);
         cachedContourData.grid.nodeYToPixel.domain([0, cachedContourData.grid.height]).range([0, d3Canvas.attr('height')]);
+    } else if (_.isFinite(this.drawWidth) && _.isFinite(this.drawHeight)) {
+        cachedContourData.grid.nodeXToPixel.domain([0, cachedContourData.grid.width]).range([0, this.drawWidth]);
+        cachedContourData.grid.nodeYToPixel.domain([0, cachedContourData.grid.height]).range([0, this.drawHeight]);
     } else {
         cachedContourData.grid.nodeXToPixel.domain([0, 1]).range([0, 1]);
         cachedContourData.grid.nodeYToPixel.domain([0, 1]).range([0, 1]);
