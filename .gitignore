@@ -1,5 +1,3 @@
 node_modules
 dist/index.html
-yarn.lock
-package-lock.json
 yarn-error.log

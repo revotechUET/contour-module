@@ -1,4 +1,22 @@
 {
+  "name": "@revotechuet/contour-module",
+  "version": "1.1.0",
+  "main": "./src/components/index-vue.js",
+  "module": "./src/components/index-vue.js",
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "dev:vue": "export BUILD_ENV=dev && webpack-dev-server --color",
+    "dev:vue:build": "export BUILD_ENV=dev && webpack",
+    "prod:vue": "export BUILD_ENV=prod && webpack",
+    "dev:angular": "export BUILD_ENV=dev && export BUILD_TARGET=angular && webpack-dev-server --color",
+    "dev:angular:build": "export BUILD_ENV=dev && export BUILD_TARGET=angular && webpack",
+    "prod:angular": "export BUILD_ENV=prod && export BUILD_TARGET=angular && webpack",
+    "win:dev:angular": "set BUILD_ENV=dev && set BUILD_TARGET=angular && webpack-dev-server --color",
+    "win:prod:angular": "set BUILD_ENV=prod && set BUILD_TARGET=angular && webpack",
+    "win:dev:angular:build": "set BUILD_ENV=dev && set BUILD_TARGET=angular && webpack"
+  },
   "dependencies": {
     "angular": "^1.7.9",
     "d3": "v5",
@@ -6,9 +24,6 @@
     "vue": "^2.6.11",
     "vue-fragment": "^1.5.1"
   },
-  "name": "simple-todo-app",
-  "version": "1.0.0",
-  "main": "index.js",
   "devDependencies": {
     "css-loader": "^3.4.2",
     "hard-source-webpack-plugin": "^0.13.1",
@@ -20,17 +35,6 @@
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.11",
     "webpack-dev-server": "^3.10.3"
-  },
-  "scripts": {
-    "dev:vue": "export BUILD_ENV=dev && webpack-dev-server --color --config webpack.conf.js",
-    "dev:vue:build": "export BUILD_ENV=dev && webpack --config webpack.conf.js",
-    "prod:vue": "export BUILD_ENV=prod && webpack --config webpack.conf.js",
-    "dev:angular": "export BUILD_ENV=dev && export BUILD_TARGET=angular && webpack-dev-server --color --config webpack.conf.js",
-    "dev:angular:build": "export BUILD_ENV=dev && export BUILD_TARGET=angular && webpack --config webpack.conf.js",
-    "prod:angular": "export BUILD_ENV=prod && export BUILD_TARGET=angular && webpack --config webpack.conf.js",
-    "win:dev:angular": "set BUILD_ENV=dev && set BUILD_TARGET=angular && webpack-dev-server --color --config webpack.conf.js",
-    "win:prod:angular": "set BUILD_ENV=prod && set BUILD_TARGET=angular && webpack --config webpack.conf.js",
-    "win:dev:angular:build": "set BUILD_ENV=dev && set BUILD_TARGET=angular && webpack --config webpack.conf.js"
   },
   "author": "",
   "license": "ISC",
